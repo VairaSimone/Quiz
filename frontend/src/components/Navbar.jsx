@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Gamepad2, PlusCircle, ShieldCheck } from 'lucide-react';
+import { Gamepad2, PlusCircle, ShieldCheck, Image as ImageIcon } from 'lucide-react';
 
 export default function Navbar({ onOpenCreateModal }) {
   const location = useLocation();
@@ -12,7 +12,7 @@ export default function Navbar({ onOpenCreateModal }) {
         <div className="flex items-center gap-3">
           <Link to="/" className="flex items-center gap-2 text-xl font-bold text-indigo-400 hover:text-indigo-300">
             <Gamepad2 className="w-8 h-8" />
-            <span>Quiz Wondeful</span>
+            <span>Quiz Wonderful</span>
           </Link>
           {isAdmin && (
             <span className="bg-amber-500/10 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-1 rounded-full font-bold flex items-center gap-1">
@@ -21,7 +21,18 @@ export default function Navbar({ onOpenCreateModal }) {
           )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
+          {/* Nuovo pulsante visibile a tutti per la modalità Indovina PG */}
+          <Link 
+            to="/guess-character" 
+            className="flex items-center gap-2 text-sm text-slate-300 hover:text-indigo-400 font-medium transition"
+          >
+            <ImageIcon className="w-4 h-4" />
+            <span>Indovina PG</span>
+          </Link>
+
+          <div className="w-px h-6 bg-slate-700 mx-1"></div> {/* Separatore visivo */}
+
           {isAdmin ? (
             <>
               <button

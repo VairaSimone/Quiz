@@ -5,6 +5,7 @@ const questionController = require('../controllers/questionController');
 const upload = require('../utils/uploadConfig');
 
 // Quiz & Documenti
+router.get('/characters', quizController.getCharacters);
 router.post('/sections/:sectionId/upload-docx', upload.single('docxFile'), quizController.uploadDocxQuiz);
 router.get('/sections/:sectionId/play', quizController.getQuizPlayQuestions);
 router.post('/sections/:sectionId/results', quizController.submitQuizResult);

@@ -1,7 +1,7 @@
 const prisma = require('../config/db');
 const parseWordDocx = require('../utils/docxParser');
 const fs = require('fs');
-
+const path = require('path');
 // 1. Upload e Parsing del file Word con inserimento a database
 exports.uploadDocxQuiz = async (req, res) => {
   const { sectionId } = req.params;
@@ -136,5 +136,27 @@ exports.getSectionLeaderboard = async (req, res) => {
     res.status(200).json({ success: true, data: topScores });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Errore nel recupero classifica', error: error.message });
+  }
+};
+
+
+exports.getCharacters = async (req, res) => {
+  try {
+    // Risolviamo il percorso per arrivare a frontend/public/characters
+    const charactersDir = path.join(__dirname, '../../../frontend/public/characters');
+    
+    // Se la cartella non esiste ancora, restituiamo un array vuoto
+    if (!fs.existsSync(charactersDir)) {
+      return res.status(200).json({ success: true, data: [] });
+    }
+
+    const files = fs.readdirSync(charactersDir);
+    
+    // Filtriamo solo i file immagine (evitando file nascosti come .DS_Store)
+    const images = files.filter(file => /\.(png|jpe?g|webp|gif|avif)$/i.test(file));
+
+    res.status(200).json({ success: true, data: images });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Errore lettura personaggi', error: error.message });
   }
 };

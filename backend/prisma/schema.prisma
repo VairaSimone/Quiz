@@ -1,0 +1,47 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Section {
+  id          String       @id @default(uuid())
+  title       String       @unique
+  description String?
+  coverImage  String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  questions   Question[]
+  gameResults GameResult[]
+}
+
+model Question {
+  id            String   @id @default(uuid())
+  sectionId     String
+  section       Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  type          String   @default("MULTIPLE_CHOICE") // MULTIPLE_CHOICE | SHORT_ANSWER | BOOLEAN | WHO_SAID
+  level         String   @default("MEDIO")           // FACILE | MEDIO | DIFFICILE
+  questionText  String
+  correctAnswer String
+  options       Option[]
+  createdAt     DateTime @default(now())
+}
+
+model Option {
+  id         String   @id @default(uuid())
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  text       String
+}
+
+model GameResult {
+  id             String   @id @default(uuid())
+  sectionId      String
+  section        Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  score          Int
+  totalQuestions Int
+  playedAt       DateTime @default(now())
+}

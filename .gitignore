@@ -1,0 +1,47 @@
+# Dipendenze
+node_modules/
+**/node_modules/
+
+# Cartelle e file generati da Agenti AI
+backend/.agents/
+**/agents/
+skills-lock.json
+
+# File di ambiente e segreti (MAI su GitHub)
+.env
+.env.*
+!.env.example
+
+# Database locale e temporanei Prisma
+*.db
+*.db-journal
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+/generated/prisma
+
+# Cartelle di build del frontend
+dist/
+dist-ssr/
+build/
+.output/
+
+# Log
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Configurazioni IDE e Sistema Operativo
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

@@ -1,10 +1,41 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Gamepad2, PlusCircle, ShieldCheck, Image as ImageIcon } from 'lucide-react';
+import API from '../api/client';
 
 export default function Navbar({ onOpenCreateModal }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const isAdmin = location.pathname.startsWith('/admin');
+
+  const handleAdminAccess = async (e) => {
+    e.preventDefault();
+    
+    // Se è già salvata una password, proviamo ad accedere direttamente
+    const storedPassword = localStorage.getItem('adminPassword');
+    if (storedPassword) {
+      navigate('/admin');
+      return;
+    }
+
+    const inputPassword = prompt('Inserisci la password Admin:');
+    if (!inputPassword) return;
+
+    try {
+      // Salva e verifica
+      localStorage.setItem('adminPassword', inputPassword);
+      await API.post('/quiz/admin/verify');
+      navigate('/admin');
+    } catch (err) {
+      localStorage.removeItem('adminPassword');
+      alert('Password errata!');
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminPassword');
+    navigate('/');
+  };
 
   return (
     <nav className="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-50">
@@ -22,16 +53,12 @@ export default function Navbar({ onOpenCreateModal }) {
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Nuovo pulsante visibile a tutti per la modalità Indovina PG */}
-          <Link 
-            to="/guess-character" 
-            className="flex items-center gap-2 text-sm text-slate-300 hover:text-indigo-400 font-medium transition"
-          >
+          <Link to="/guess-character" className="flex items-center gap-2 text-sm text-slate-300 hover:text-indigo-400 font-medium transition">
             <ImageIcon className="w-4 h-4" />
             <span>Indovina PG</span>
           </Link>
 
-          <div className="w-px h-6 bg-slate-700 mx-1"></div> {/* Separatore visivo */}
+          <div className="w-px h-6 bg-slate-700 mx-1"></div>
 
           {isAdmin ? (
             <>
@@ -42,20 +69,20 @@ export default function Navbar({ onOpenCreateModal }) {
                 <PlusCircle className="w-4 h-4" />
                 <span>Nuova Sezione</span>
               </button>
-              <Link
-                to="/"
+              <button
+                onClick={handleLogout}
                 className="text-xs text-slate-400 hover:text-white underline ml-2"
               >
                 Esci da Admin
-              </Link>
+              </button>
             </>
           ) : (
-            <Link
-              to="/admin"
-              className="text-xs text-slate-500 hover:text-slate-300 transition"
+            <button
+              onClick={handleAdminAccess}
+              className="text-xs text-slate-500 hover:text-slate-300 transition cursor-pointer"
             >
               Area Riservata
-            </Link>
+            </button>
           )}
         </div>
       </div>

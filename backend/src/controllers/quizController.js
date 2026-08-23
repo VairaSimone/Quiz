@@ -97,7 +97,7 @@ exports.getQuizPlayQuestions = async (req, res) => {
 // 3. Salva il punteggio finale del giocatore
 exports.submitQuizResult = async (req, res) => {
   const { sectionId } = req.params;
-  const { score, totalQuestions } = req.body;
+  const { score, totalQuestions, playerName } = req.body;
 
   if (score === undefined || totalQuestions === undefined) {
     return res.status(400).json({ success: false, message: 'Punteggio e totale domande sono richiesti' });
@@ -107,6 +107,7 @@ exports.submitQuizResult = async (req, res) => {
     const result = await prisma.gameResult.create({
       data: {
         sectionId,
+        playerName: playerName?.trim() || 'Anonimo',
         score: parseInt(score),
         totalQuestions: parseInt(totalQuestions)
       }
@@ -143,8 +144,8 @@ exports.getSectionLeaderboard = async (req, res) => {
 exports.getCharacters = async (req, res) => {
   try {
     // Risolviamo il percorso per arrivare a frontend/public/characters
-    const charactersDir = path.join(__dirname, '../../../frontend/public/characters');
-    
+const charactersDir = path.join(__dirname, '../../uploads/characters');
+
     // Se la cartella non esiste ancora, restituiamo un array vuoto
     if (!fs.existsSync(charactersDir)) {
       return res.status(200).json({ success: true, data: [] });

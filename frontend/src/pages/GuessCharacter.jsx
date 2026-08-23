@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Heart, Timer, Trophy, RotateCcw, Home, XCircle, Sparkles, 
-  CheckCircle2, Eye, Zap, Image as ImageIcon, FastForward, ArrowLeft 
+import {
+  Heart, Timer, Trophy, RotateCcw, Home, XCircle, Sparkles,
+  CheckCircle2, Eye, Zap, Image as ImageIcon, FastForward, ArrowLeft
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import API from '../api/client';
-
+import API, { SERVER_URL } from '../api/client';
 export default function GuessCharacter() {
   const navigate = useNavigate();
   const inputRef = useRef(null);
@@ -282,7 +281,7 @@ export default function GuessCharacter() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button 
+          <button
             onClick={() => handleSelectMode('classic')}
             className="bg-slate-900 border border-slate-800 hover:border-indigo-500 p-6 rounded-2xl text-left transition group cursor-pointer"
           >
@@ -298,7 +297,7 @@ export default function GuessCharacter() {
             <p className="text-xs text-slate-400">3 cuori a disposizione. Guarda la foto e scrivi il nome del personaggio.</p>
           </button>
 
-          <button 
+          <button
             onClick={() => handleSelectMode('reverse')}
             className="bg-slate-900 border border-slate-800 hover:border-indigo-500 p-6 rounded-2xl text-left transition group cursor-pointer"
           >
@@ -314,7 +313,7 @@ export default function GuessCharacter() {
             <p className="text-xs text-slate-400">Ti viene mostrato il nome in alto: seleziona l'immagine corretta tra le 4 proposte.</p>
           </button>
 
-          <button 
+          <button
             onClick={() => handleSelectMode('blur')}
             className="bg-slate-900 border border-slate-800 hover:border-indigo-500 p-6 rounded-2xl text-left transition group cursor-pointer"
           >
@@ -330,7 +329,7 @@ export default function GuessCharacter() {
             <p className="text-xs text-slate-400">L'immagine parte molto sfocata. Più velocemente indovini, più punti ottieni!</p>
           </button>
 
-          <button 
+          <button
             onClick={() => handleSelectMode('timeattack')}
             className="bg-slate-900 border border-slate-800 hover:border-indigo-500 p-6 rounded-2xl text-left transition group cursor-pointer"
           >
@@ -364,7 +363,7 @@ export default function GuessCharacter() {
             {hearts > 0 || selectedMode === 'timeattack' ? 'Partita Finita!' : 'Game Over'}
           </h1>
           <p className="text-slate-400 text-sm mb-6">Punteggio finale: <span className="text-indigo-400 font-bold">{score} pt</span></p>
-          
+
           <div className="grid grid-cols-2 gap-3">
             <button onClick={() => window.location.reload()} className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 py-3 rounded-xl font-semibold transition text-sm cursor-pointer">
               <RotateCcw className="w-4 h-4" /> Rigioca
@@ -384,8 +383,8 @@ export default function GuessCharacter() {
   return (
     <div className="max-w-xl mx-auto px-4 py-6">
       {/* Tasto per cambiare modalità */}
-      <button 
-        onClick={() => setSelectedMode(null)} 
+      <button
+        onClick={() => setSelectedMode(null)}
         className="flex items-center gap-1 text-xs text-slate-400 hover:text-white mb-4 transition cursor-pointer"
       >
         <ArrowLeft className="w-4 h-4" /> Cambia Modalità
@@ -407,17 +406,16 @@ export default function GuessCharacter() {
 
         <div className="text-xl font-black text-indigo-400">Score: {score}</div>
 
-        <div className={`flex items-center gap-2 font-bold ${
-          (selectedMode === 'timeattack' ? globalTimeLeft : timeLeft) <= 3 ? 'text-rose-500 animate-pulse' : 'text-emerald-400'
-        }`}>
-          <Timer className="w-5 h-5" /> 
+        <div className={`flex items-center gap-2 font-bold ${(selectedMode === 'timeattack' ? globalTimeLeft : timeLeft) <= 3 ? 'text-rose-500 animate-pulse' : 'text-emerald-400'
+          }`}>
+          <Timer className="w-5 h-5" />
           {selectedMode === 'timeattack' ? `${globalTimeLeft}s` : `${timeLeft}s`}
         </div>
       </div>
 
       {/* Area di Gioco */}
       <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center shadow-xl">
-        
+
         {/* Titolo Domanda Differenziato */}
         {selectedMode === 'reverse' ? (
           <h2 className="text-2xl font-black text-white mb-6">
@@ -430,44 +428,42 @@ export default function GuessCharacter() {
         {/* Modalità Inversa: Griglia 4 Immagini */}
         {selectedMode === 'reverse' ? (
           <div className="grid grid-cols-2 gap-4 mb-6">
-            {imageOptions.map((fileOpt, idx) => (
-              <button
-                key={idx}
-                disabled={isAnswering}
-                onClick={() => handleImageClick(fileOpt)}
-                className="bg-slate-950/80 border-2 border-slate-800 hover:border-indigo-500 rounded-2xl p-2 h-40 flex items-center justify-center transition cursor-pointer overflow-hidden disabled:opacity-50"
-              >
-                <img 
-                  src={`/characters/${encodeURIComponent(fileOpt)}`} 
-                  alt="Opzione" 
-                  className="max-h-full max-w-full object-contain rounded-lg"
-                />
-              </button>
-            ))}
+{imageOptions.map((fileOpt, idx) => (
+  <button
+    key={idx}
+    disabled={isAnswering}
+    onClick={() => handleImageClick(fileOpt)}
+    className="bg-slate-950/80 border-2 border-slate-800 hover:border-indigo-500 rounded-2xl p-2 h-40 flex items-center justify-center transition cursor-pointer overflow-hidden disabled:opacity-50"
+  >
+    <img 
+      src={`${SERVER_URL}/uploads/characters/${encodeURIComponent(fileOpt)}`}
+      alt="Opzione" 
+      className="max-h-full max-w-full object-contain rounded-lg"
+    />
+  </button>
+))}
           </div>
         ) : (
           /* Modalità Classica / Blur / Time Attack: Immagine Singola */
-          <div className={`w-full h-80 bg-slate-950/80 rounded-2xl border-2 p-3 mb-6 flex items-center justify-center overflow-hidden relative transition-all duration-300 ${
-            feedback?.status === 'success' ? 'border-emerald-500 shadow-lg shadow-emerald-500/20' :
-            feedback?.status === 'error' ? 'border-rose-500 shadow-lg shadow-rose-500/20' :
-            'border-slate-800'
-          }`}>
-            <img 
-              src={`/characters/${encodeURIComponent(currentFile)}`} 
-              alt="Indovina il personaggio" 
-              style={{ filter: `blur(${currentBlur}px)` }}
-              className="max-h-full max-w-full object-contain rounded-lg drop-shadow-md transition-all duration-300"
-            />
+          <div className={`w-full h-80 bg-slate-950/80 rounded-2xl border-2 p-3 mb-6 flex items-center justify-center overflow-hidden relative transition-all duration-300 ${feedback?.status === 'success' ? 'border-emerald-500 shadow-lg shadow-emerald-500/20' :
+              feedback?.status === 'error' ? 'border-rose-500 shadow-lg shadow-rose-500/20' :
+                'border-slate-800'
+            }`}>
+<img 
+  src={`${SERVER_URL}/uploads/characters/${encodeURIComponent(currentFile)}`} 
+  alt="Indovina il personaggio" 
+  style={{ filter: `blur(${currentBlur}px)` }}
+  className="max-h-full max-w-full object-contain rounded-lg drop-shadow-md transition-all duration-300"
+/>
           </div>
         )}
 
         {/* Banner Feedback */}
         {feedback && (
-          <div className={`mb-4 p-3 rounded-xl text-center font-bold text-sm transition-all flex items-center justify-center gap-2 ${
-            feedback.status === 'success' 
-              ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800' 
+          <div className={`mb-4 p-3 rounded-xl text-center font-bold text-sm transition-all flex items-center justify-center gap-2 ${feedback.status === 'success'
+              ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800'
               : 'bg-rose-950/80 text-rose-400 border border-rose-800'
-          }`}>
+            }`}>
             {feedback.status === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
             <span>{feedback.text}</span>
           </div>

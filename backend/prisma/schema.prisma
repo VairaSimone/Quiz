@@ -41,6 +41,7 @@ model GameResult {
   id             String   @id @default(uuid())
   sectionId      String
   section        Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  playerName     String   @default("Anonimo")
   score          Int
   totalQuestions Int
   playedAt       DateTime @default(now())

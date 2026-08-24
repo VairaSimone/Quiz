@@ -22,8 +22,8 @@ model Question {
   id            String   @id @default(uuid())
   sectionId     String
   section       Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-  type          String   @default("MULTIPLE_CHOICE") // MULTIPLE_CHOICE | SHORT_ANSWER | BOOLEAN | WHO_SAID
-  level         String   @default("MEDIO")           // FACILE | MEDIO | DIFFICILE
+  type          String   @default("MULTIPLE_CHOICE")
+  level         String   @default("MEDIO")
   questionText  String
   correctAnswer String
   options       Option[]
@@ -45,4 +45,14 @@ model GameResult {
   score          Int
   totalQuestions Int
   playedAt       DateTime @default(now())
+}
+
+model Story {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  coverImage  String?
+  contentJson String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

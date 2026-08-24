@@ -161,3 +161,19 @@ const charactersDir = path.join(__dirname, '../../uploads/characters');
     res.status(500).json({ success: false, message: 'Errore lettura personaggi', error: error.message });
   }
 };
+
+
+exports.getAudioFiles = async (req, res) => {
+  try {
+    const audioDir = path.join(__dirname, '../../uploads/audio');
+    if (!fs.existsSync(audioDir)) {
+      fs.mkdirSync(audioDir, { recursive: true });
+      return res.status(200).json({ success: true, data: [] });
+    }
+    const files = fs.readdirSync(audioDir);
+    const audio = files.filter(file => /\.(mp3|wav|ogg|m4a|aac)$/i.test(file));
+    res.status(200).json({ success: true, data: audio });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Errore lettura audio', error: error.message });
+  }
+};

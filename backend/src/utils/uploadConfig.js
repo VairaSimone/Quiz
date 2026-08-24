@@ -2,8 +2,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Assicuriamoci che le cartelle esistano
-const uploadDirs = ['uploads/covers', 'uploads/docs'];
+const uploadDirs = ['uploads/covers', 'uploads/docs', 'uploads/json'];
 uploadDirs.forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
@@ -16,6 +15,8 @@ const storage = multer.diskStorage({
       cb(null, 'uploads/covers');
     } else if (file.fieldname === 'docxFile') {
       cb(null, 'uploads/docs');
+    } else if (file.fieldname === 'jsonFile') {
+      cb(null, 'uploads/json');
     } else {
       cb(new Error('Campo upload non valido'), null);
     }
@@ -35,15 +36,27 @@ const fileFilter = (req, file, cb) => {
     if (file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.originalname.endsWith('.docx')) {
       cb(null, true);
     } else cb(new Error('Carica un file valido con estensione .docx'), false);
+  } else if (file.fieldname === 'jsonFile') {
+    if (
+      file.mimetype === 'application/json' ||
+      file.mimetype === 'text/json' ||
+      file.mimetype === 'text/plain' ||
+      file.originalname.endsWith('.json')
+    ) {
+      cb(null, true);
+    } else {
+      cb(new Error('Carica un file valido con estensione .json'), false);
+    }
   } else {
     cb(new Error('Campo non riconosciuto'), false);
   }
 };
 
+// Rimosso qualsiasi limite stringente di dimensione file
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 } // Limite 10MB
+  limits: { fileSize: 100 * 1024 * 1024 } // Limite esteso a 100MB
 });
 
 module.exports = upload;

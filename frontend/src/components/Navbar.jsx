@@ -1,17 +1,16 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Gamepad2, PlusCircle, ShieldCheck, Image as ImageIcon } from 'lucide-react';
+import { Gamepad2, PlusCircle, ShieldCheck, Image as ImageIcon, Users, BookOpen } from 'lucide-react';
 import API from '../api/client';
 
 export default function Navbar({ onOpenCreateModal }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const isAdmin = location.pathname.startsWith('/admin');
+  const isAdmin = location.pathname.startsWith('/admin') || Boolean(localStorage.getItem('adminPassword'));
 
   const handleAdminAccess = async (e) => {
     e.preventDefault();
     
-    // Se è già salvata una password, proviamo ad accedere direttamente
     const storedPassword = localStorage.getItem('adminPassword');
     if (storedPassword) {
       navigate('/admin');
@@ -22,7 +21,6 @@ export default function Navbar({ onOpenCreateModal }) {
     if (!inputPassword) return;
 
     try {
-      // Salva e verifica
       localStorage.setItem('adminPassword', inputPassword);
       await API.post('/quiz/admin/verify');
       navigate('/admin');
@@ -41,7 +39,7 @@ export default function Navbar({ onOpenCreateModal }) {
     <nav className="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link to="/" className="flex items-center gap-2 text-xl font-bold text-indigo-400 hover:text-indigo-300">
+          <Link to={isAdmin ? "/admin" : "/"} className="flex items-center gap-2 text-xl font-bold text-indigo-400 hover:text-indigo-300">
             <Gamepad2 className="w-8 h-8" />
             <span>Quiz Wonderful</span>
           </Link>
@@ -53,11 +51,18 @@ export default function Navbar({ onOpenCreateModal }) {
         </div>
 
         <div className="flex items-center gap-4">
+          <Link to={isAdmin ? "/admin/stories" : "/stories"} className="flex items-center gap-2 text-sm text-slate-300 hover:text-indigo-400 font-medium transition">
+            <BookOpen className="w-4 h-4" />
+            <span>Racconti</span>
+          </Link>
           <Link to="/guess-character" className="flex items-center gap-2 text-sm text-slate-300 hover:text-indigo-400 font-medium transition">
             <ImageIcon className="w-4 h-4" />
             <span>Indovina PG</span>
           </Link>
-
+          <Link to="/multiplayer" className="flex items-center gap-2 text-sm text-slate-300 hover:text-indigo-400 font-medium transition">
+            <Users className="w-4 h-4" />
+            <span>Multiplayer</span>
+          </Link>
           <div className="w-px h-6 bg-slate-700 mx-1"></div>
 
           {isAdmin ? (
@@ -71,7 +76,7 @@ export default function Navbar({ onOpenCreateModal }) {
               </button>
               <button
                 onClick={handleLogout}
-                className="text-xs text-slate-400 hover:text-white underline ml-2"
+                className="text-xs text-slate-400 hover:text-white underline ml-2 cursor-pointer"
               >
                 Esci da Admin
               </button>

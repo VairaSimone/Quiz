@@ -161,14 +161,19 @@ const charactersDir = path.join(__dirname, '../../static/characters');
   }
 };
 
-
 exports.getAudioFiles = async (req, res) => {
   try {
-    const audioDir = path.join(__dirname, '../../static/audio');
+    // Legge la lingua dalla query string, con 'jp' come default e whitelist di sicurezza
+    const { lang = 'jp' } = req.query;
+    const selectedLang = ['jp', 'it'].includes(lang) ? lang : 'jp';
+
+    const audioDir = path.join(__dirname, '../../static/audio', selectedLang);
+
     if (!fs.existsSync(audioDir)) {
       fs.mkdirSync(audioDir, { recursive: true });
       return res.status(200).json({ success: true, data: [] });
     }
+
     const files = fs.readdirSync(audioDir);
     const audio = files.filter(file => /\.(mp3|wav|ogg|m4a|aac)$/i.test(file));
     res.status(200).json({ success: true, data: audio });

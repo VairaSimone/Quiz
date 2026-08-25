@@ -12,7 +12,7 @@ export default function MultiplayerPlay() {
   const gameData = state?.gameData || {};
   const roomCode = gameData.roomCode;
   const mode = gameData.mode;
-
+const [audioLang, setAudioLang] = useState(gameData.audioLang || 'jp');
   const [currentQuestion, setCurrentQuestion] = useState(gameData.currentQuestion || null);
   const [currentIndex, setCurrentIndex] = useState(gameData.currentIndex || 0);
   const [totalRounds, setTotalRounds] = useState(gameData.total || 10);
@@ -119,17 +119,18 @@ const sendEmojiWithCooldown = (emoji) => {
       return;
     }
 
-    const handleNextQuestion = ({ currentQuestion, currentIndex, total, timeLeft, players }) => {
-      setCurrentQuestion(currentQuestion);
-      if (currentIndex !== undefined) setCurrentIndex(currentIndex);
-      if (total) setTotalRounds(total);
-      setTimeLeft(timeLeft);
-      setPlayers(players);
-      setWinnerMessage(null);
-      setUserInput('');
-      setKahootInput('');
-      setRoundLocked(false);
-    };
+const handleNextQuestion = ({ currentQuestion, currentIndex, total, timeLeft, players, audioLang }) => {
+  if (audioLang) setAudioLang(audioLang);
+  setCurrentQuestion(currentQuestion);
+  if (currentIndex !== undefined) setCurrentIndex(currentIndex);
+  if (total) setTotalRounds(total);
+  setTimeLeft(timeLeft);
+  setPlayers(players);
+  setWinnerMessage(null);
+  setUserInput('');
+  setKahootInput('');
+  setRoundLocked(false);
+};
 
     const handleTimerTick = ({ timeLeft }) => setTimeLeft(timeLeft);
 
@@ -356,15 +357,15 @@ const handlePlayerReaction = (reaction) => {
         <div className="w-16 h-16 bg-purple-600/20 text-purple-400 rounded-full flex items-center justify-center mb-3 animate-pulse">
           🔊
         </div>
-        {currentCharFile && (
-          <audio
-            key={currentCharFile}
-            src={`${SERVER_URL}/static/audio/${encodeURIComponent(currentCharFile)}`}
-            autoPlay
-            controls
-            className="w-full max-w-md mt-2"
-          />
-        )}
+{currentCharFile && (
+  <audio
+    key={`${audioLang}-${currentCharFile}`}
+    src={`${SERVER_URL}/static/audio/${audioLang}/${encodeURIComponent(currentCharFile)}`}
+    autoPlay
+    controls
+    className="w-full max-w-md mt-2"
+  />
+)}
       </div>
     ) : (
       /* Immagine per FASTEST_FINGER / BLUR_DUEL */

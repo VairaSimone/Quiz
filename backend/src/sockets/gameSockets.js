@@ -53,14 +53,15 @@ module.exports = function setupGameSockets(io) {
 
   const currentQ = room.questions[room.currentIndex];
 
-  io.to(roomCode).emit('next_question_ready', {
-    currentQuestion: currentQ,
-    currentIndex: room.currentIndex,
-    total: room.questions.length,
-    timeLeft: room.timeLeft,
-    timerDuration: room.timerDuration,
-    players: room.players
-  });
+io.to(roomCode).emit('next_question_ready', {
+  currentQuestion: currentQ,
+  audioLang: room.audioLang, // <-- Invia la lingua selezionata per la stanza
+  currentIndex: room.currentIndex,
+  total: room.questions.length,
+  timeLeft: room.timeLeft,
+  timerDuration: room.timerDuration,
+  players: room.players
+});
 
     room.timer = setInterval(() => {
       const liveRoom = rooms.get(roomCode);
@@ -126,7 +127,7 @@ module.exports = function setupGameSockets(io) {
 
 // backend/src/sockets/gameSockets.js
 
-socket.on('create_room', async ({ mode, sectionId, playerName, avatar, timerDuration = 15, totalRounds = 10 }) => {
+socket.on('create_room', async ({ mode, sectionId, playerName, avatar, timerDuration = 15, totalRounds = 10, audioLang = 'jp' }) => {
   const roomCode = generateRoomCode();
   let questions = [];
 
@@ -141,17 +142,19 @@ socket.on('create_room', async ({ mode, sectionId, playerName, avatar, timerDura
       questions = fs.readdirSync(charDir).filter(f => /\.(png|jpe?g|webp)$/i.test(f));
     }
   } else if (mode === 'AUDIO_DUEL') {
-    const audioDir = path.join(__dirname, '../../static/audio');
+    // Seleziona la sottocartella in base alla lingua scelta ('jp' o 'it')
+    const selectedLang = ['jp', 'it'].includes(audioLang) ? audioLang : 'jp';
+    const audioDir = path.join(__dirname, `../../static/audio/${selectedLang}`);
+    
     if (fs.existsSync(audioDir)) {
       questions = fs.readdirSync(audioDir).filter(f => /\.(mp3|wav|ogg|m4a|aac)$/i.test(f));
     }
   }
 
   if (questions.length === 0) {
-    return socket.emit('error_msg', 'Nessuna domanda o personaggio disponibile per questa modalità');
+    return socket.emit('error_msg', 'Nessuna domanda o file audio disponibile per questa modalità');
   }
 
-  // Se totalRounds è 'ENDLESS' (o 999), usiamo tutte le domande disponibili senza limitarle a 10
   const maxLimit = totalRounds === 'ENDLESS' ? questions.length : Math.min(Number(totalRounds), questions.length);
   questions = questions.sort(() => 0.5 - Math.random()).slice(0, maxLimit);
 
@@ -160,6 +163,7 @@ socket.on('create_room', async ({ mode, sectionId, playerName, avatar, timerDura
   const newRoom = {
     code: roomCode,
     mode,
+    audioLang, // Salviamo la lingua scelta nella stanza
     hostId: socket.id,
     status: 'LOBBY',
     currentIndex: 0,
@@ -194,15 +198,17 @@ socket.on('create_room', async ({ mode, sectionId, playerName, avatar, timerDura
       if (!room || room.hostId !== socket.id || room.status !== 'LOBBY') return;
 
       room.currentIndex = 0;
-      io.to(roomCode).emit('game_started', {
-        roomCode: room.code,
-        mode: room.mode,
-        total: room.questions.length,
-        currentIndex: 0,
-        currentQuestion: room.questions[0],
-        players: room.players,
-        timeLeft: 15
-      });
+io.to(roomCode).emit('game_started', {
+  roomCode: room.code,
+  mode: room.mode,
+  audioLang: room.audioLang,
+  total: room.questions.length,
+  currentIndex: 0,
+  currentQuestion: room.questions[0],
+  players: room.players,
+  timeLeft: room.timerDuration,
+  timerDuration: room.timerDuration
+});
 
       startRoundTimer(roomCode);
     });

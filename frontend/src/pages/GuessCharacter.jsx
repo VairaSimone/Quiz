@@ -6,12 +6,14 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import API, { SERVER_URL } from '../api/client';
+
 export default function GuessCharacter() {
   const navigate = useNavigate();
   const inputRef = useRef(null);
-  const [audioFiles, setAudioFiles] = useState([]);
+  
   // Stati Generali
-  const [selectedMode, setSelectedMode] = useState(null); // 'classic' | 'reverse' | 'blur' | 'timeattack'
+  const [selectedMode, setSelectedMode] = useState(null); // 'classic' | 'reverse' | 'blur' | 'timeattack' | 'audio'
+  const [audioLang, setAudioLang] = useState('jp'); // 'jp' o 'it'
   const [shuffledCharacters, setShuffledCharacters] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userInput, setUserInput] = useState('');
@@ -33,14 +35,16 @@ export default function GuessCharacter() {
   const getRoundTime = (mode) => {
     if (mode === 'reverse') return 5;
     if (mode === 'classic') return 10;
-    return 15; // blur o default
+    return 15; // blur o audio
   };
 
   // Selezione della modalità
-  const handleSelectMode = async (mode) => {
+  const handleSelectMode = async (mode, lang = 'jp') => {
     if (mode === 'audio') {
+      setAudioLang(lang);
       try {
-        const res = await API.get('/quiz/audio');
+        // Passiamo la lingua come parametro all'API
+        const res = await API.get(`/quiz/audio?lang=${lang}`);
         setShuffledCharacters(res.data.data.sort(() => 0.5 - Math.random()));
       } catch (e) {
         console.error(e);
@@ -90,7 +94,7 @@ export default function GuessCharacter() {
     }
   };
 
-  // Caricamento Personaggi dal Backend
+  // Caricamento Personaggi dal Backend (Per le modalità non audio)
   useEffect(() => {
     const fetchCharacters = async () => {
       try {
@@ -131,7 +135,7 @@ export default function GuessCharacter() {
     }
   }, [currentIndex, isAnswering, gameOver, selectedMode]);
 
-  // Timer per Modalità Classica (10s), Reverse (5s) e Blur (15s)
+  // Timer per Modalità Classica (10s), Reverse (5s) e Blur/Audio (15s)
   useEffect(() => {
     if (!selectedMode || selectedMode === 'timeattack' || gameOver || !currentFile || isAnswering) return;
 
@@ -197,7 +201,7 @@ export default function GuessCharacter() {
     }
   };
 
-  // Risposta per Modalità Testuali (Classica, Blur, Time Attack)
+  // Risposta per Modalità Testuali
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!userInput.trim() || isAnswering) return;
@@ -238,29 +242,29 @@ export default function GuessCharacter() {
   };
 
   // Helper per calcolare l'indizio dinamico sul nome
-function getHintText(fileName, timeLeft, totalTime) {
-  if (!fileName || totalTime <= 0) return '';
-  const firstName = (fileName.substring(0, fileName.lastIndexOf('.')) || fileName).trim().split(/\s+/)[0];
-  const cleanName = firstName.trim();
-  const len = cleanName.length;
-  const ratio = timeLeft / totalTime;
+  function getHintText(fileName, timeLeft, totalTime) {
+    if (!fileName || totalTime <= 0) return '';
+    const firstName = (fileName.substring(0, fileName.lastIndexOf('.')) || fileName).trim().split(/\s+/)[0];
+    const cleanName = firstName.trim();
+    const len = cleanName.length;
+    const ratio = timeLeft / totalTime;
 
-  if (ratio > 0.6) return null; // Nessun indizio nella prima fase del timer
+    if (ratio > 0.6) return null; // Nessun indizio nella prima fase del timer
 
-  if (ratio > 0.3) {
-    // Rivelazione lunghezza
-    const blanks = cleanName.split('').map(() => '_').join(' ');
-    return `💡 Indizio: ${len} lettere (${blanks})`;
+    if (ratio > 0.3) {
+      // Rivelazione lunghezza
+      const blanks = cleanName.split('').map(() => '_').join(' ');
+      return `💡 Indizio: ${len} lettere (${blanks})`;
+    }
+
+    // Rivelazione prima lettera + lettere ad indici fissi
+    const revealed = cleanName.split('').map((char, i) => {
+      if (i === 0 || i % 3 === 0) return char.toUpperCase();
+      return '_';
+    }).join(' ');
+
+    return `💡 Indizio: ${len} lettere (${revealed})`;
   }
-
-  // Rivelazione prima lettera + lettere ad indici fissi
-  const revealed = cleanName.split('').map((char, i) => {
-    if (i === 0 || i % 3 === 0) return char.toUpperCase();
-    return '_';
-  }).join(' ');
-
-  return `💡 Indizio: ${len} lettere (${revealed})`;
-}
 
   // Risposta per Modalità Inversa (Click Immagine)
   const handleImageClick = (selectedFile) => {
@@ -378,10 +382,8 @@ function getHintText(fileName, timeLeft, totalTime) {
             <p className="text-xs text-slate-400">Niente vite! Hai 60 secondi totali per indovinare più personaggi possibili con tasto Salta.</p>
           </button>
 
-          <button
-            onClick={() => handleSelectMode('audio')}
-            className="bg-slate-900 border border-slate-800 hover:border-purple-500 p-6 rounded-2xl text-left transition group cursor-pointer"
-          >
+          {/* Card Audio Modificata per Lingua */}
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl text-left transition group">
             <div className="flex items-center gap-3 mb-2">
               <div className="p-3 bg-purple-600/20 text-purple-400 rounded-xl group-hover:scale-110 transition">
                 🎧
@@ -391,8 +393,22 @@ function getHintText(fileName, timeLeft, totalTime) {
                 <span className="text-[10px] font-bold bg-purple-950 text-purple-400 px-2 py-0.5 rounded">15s per traccia</span>
               </div>
             </div>
-            <p className="text-xs text-slate-400">Ascolta l'audio e scrivi il nome del personaggio a cui appartiene.</p>
-          </button>
+            <p className="text-xs text-slate-400 mb-4">Ascolta l'audio e scrivi il nome del personaggio a cui appartiene.</p>
+            <div className="flex gap-2 mt-auto">
+              <button
+                onClick={() => handleSelectMode('audio', 'jp')}
+                className="flex-1 bg-slate-800 hover:bg-purple-600 text-slate-300 hover:text-white py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer text-center"
+              >
+                🇯🇵 JP
+              </button>
+              <button
+                onClick={() => handleSelectMode('audio', 'it')}
+                className="flex-1 bg-slate-800 hover:bg-purple-600 text-slate-300 hover:text-white py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer text-center"
+              >
+                🇮🇹 IT
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -426,7 +442,7 @@ function getHintText(fileName, timeLeft, totalTime) {
     );
   }
 
-  // Calcolo livello sfocatura per la Blur Challenge (da 20px a 0px)
+  // Calcolo livello sfocatura per la Blur Challenge
   const currentBlur = selectedMode === 'blur' ? Math.max(0, (timeLeft / 15) * 20) : 0;
 
   return (
@@ -465,7 +481,6 @@ function getHintText(fileName, timeLeft, totalTime) {
       {/* Area di Gioco */}
       <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center shadow-xl">
 
-        {/* Titolo Domanda Differenziato */}
         {selectedMode === 'reverse' ? (
           <h2 className="text-2xl font-black text-white mb-6">
             Chi è <span className="text-indigo-400 underline">{getFirstName(currentFile)}</span>?
@@ -493,13 +508,16 @@ function getHintText(fileName, timeLeft, totalTime) {
             ))}
           </div>
         ) : selectedMode === 'audio' ? (
-          /* 2. Nuova Modalità Audio */
-          <div className="w-full h-64 bg-slate-950/80 rounded-2xl border-2 border-purple-500/40 p-6 mb-6 flex flex-col items-center justify-center">
+          /* 2. Nuova Modalità Audio - Inclusa la Lingua nel Path */
+          <div className="w-full h-64 bg-slate-950/80 rounded-2xl border-2 border-purple-500/40 p-6 mb-6 flex flex-col items-center justify-center relative">
+            <div className="absolute top-4 right-4 text-xs font-bold bg-purple-900/50 text-purple-300 px-3 py-1 rounded-full border border-purple-500/30">
+              {audioLang === 'jp' ? '🇯🇵 JP' : '🇮🇹 IT'}
+            </div>
             <div className="text-4xl mb-4 animate-bounce">🎵</div>
             {currentFile && (
               <audio
                 key={currentFile}
-                src={`${SERVER_URL}/static/audio/${encodeURIComponent(currentFile)}`}
+                src={`${SERVER_URL}/static/audio/${audioLang}/${encodeURIComponent(currentFile)}`}
                 autoPlay
                 controls
                 className="w-full"
@@ -507,7 +525,7 @@ function getHintText(fileName, timeLeft, totalTime) {
             )}
           </div>
         ) : (
-          /* 3. Modalità Classica / Blur / Time Attack (Immagine Singola) */
+          /* 3. Modalità Classica / Blur / Time Attack */
           <div className={`w-full h-80 bg-slate-950/80 rounded-2xl border-2 p-3 mb-6 flex items-center justify-center overflow-hidden relative transition-all duration-300 ${feedback?.status === 'success' ? 'border-emerald-500 shadow-lg shadow-emerald-500/20' :
               feedback?.status === 'error' ? 'border-rose-500 shadow-lg shadow-rose-500/20' :
                 'border-slate-800'
@@ -521,16 +539,16 @@ function getHintText(fileName, timeLeft, totalTime) {
           </div>
         )}
 
-{/* Suggerimento Dinamico */}
-{(() => {
-  const roundTime = getRoundTime(selectedMode);
-  const hint = getHintText(currentFile, selectedMode === 'timeattack' ? globalTimeLeft : timeLeft, roundTime);
-  return hint && !isAnswering ? (
-    <div className="mb-4 py-2 px-4 bg-indigo-950/60 border border-indigo-800/80 rounded-xl text-indigo-300 text-xs font-mono font-bold tracking-wider animate-pulse text-center">
-      {hint}
-    </div>
-  ) : null;
-})()}
+        {/* Suggerimento Dinamico */}
+        {(() => {
+          const roundTime = getRoundTime(selectedMode);
+          const hint = getHintText(currentFile, selectedMode === 'timeattack' ? globalTimeLeft : timeLeft, roundTime);
+          return hint && !isAnswering ? (
+            <div className="mb-4 py-2 px-4 bg-indigo-950/60 border border-indigo-800/80 rounded-xl text-indigo-300 text-xs font-mono font-bold tracking-wider animate-pulse text-center">
+              {hint}
+            </div>
+          ) : null;
+        })()}
 
         {/* Banner Feedback */}
         {feedback && (
@@ -543,7 +561,7 @@ function getHintText(fileName, timeLeft, totalTime) {
           </div>
         )}
 
-        {/* Input Form (Nascosto in Modalità Inversa) */}
+        {/* Input Form */}
         {selectedMode !== 'reverse' && (
           <form onSubmit={handleSubmit} className="space-y-3">
             <input

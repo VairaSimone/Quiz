@@ -13,8 +13,9 @@ export default function MultiplayerLobby() {
   const navigate = useNavigate();
   const [timerDuration, setTimerDuration] = useState(15);
   const [totalRounds, setTotalRounds] = useState(10);
+  const [audioLang, setAudioLang] = useState('jp'); // 'jp' o 'it'
+
   useEffect(() => {
-    // Carica personaggi per la scelta dell'Avatar
     API.get('/quiz/characters')
       .then(res => {
         if (res.data.data.length > 0) {
@@ -61,9 +62,10 @@ export default function MultiplayerLobby() {
     socket.emit('create_room', {
       mode,
       playerName,
-      avatar: selectedAvatar,
+      avatar: selectedAvatar, // Corretto: passa lo stato selectedAvatar
       timerDuration,
-      totalRounds
+      totalRounds,
+      audioLang
     });
   };
 
@@ -149,55 +151,82 @@ export default function MultiplayerLobby() {
         )}
       </div>
 
+      {/* Regole Partita Custom */}
+      <div className="bg-slate-800/60 p-4 rounded-2xl mb-6 border border-slate-700/80 space-y-4">
+        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Regole Partita Custom</h3>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-300 mb-1.5">Timer per Round</label>
+            <select 
+              value={timerDuration} 
+              onChange={(e) => setTimerDuration(Number(e.target.value))}
+              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-indigo-400 focus:outline-none"
+            >
+              <option value={5}>5 Secondi</option>
+              <option value={10}>10 Secondi</option>
+              <option value={15}>15 Secondi</option>
+              <option value={30}>30 Secondi</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-300 mb-1.5">Numero Round</label>
+            <select 
+              value={totalRounds} 
+              onChange={(e) => setTotalRounds(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-indigo-400 focus:outline-none"
+            >
+              <option value={5}>5 Round</option>
+              <option value={10}>10 Round</option>
+              <option value={20}>20 Round</option>
+              <option value="ENDLESS">Endless (Tutte)</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Selezione Lingua Audio */}
+        <div className="pt-2 border-t border-slate-700/50">
+          <label className="block text-[11px] font-semibold text-slate-300 mb-2">Lingua Audio (Audio Quiz)</label>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setAudioLang('jp')}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                audioLang === 'jp' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-slate-900 text-slate-400 border border-slate-700'
+              }`}
+            >
+              🇯🇵 Giapponese
+            </button>
+            <button
+              type="button"
+              onClick={() => setAudioLang('it')}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                audioLang === 'it' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' : 'bg-slate-900 text-slate-400 border border-slate-700'
+              }`}
+            >
+              🇮🇹 Italiano
+            </button>
+          </div>
+        </div>
+      </div>
+
       <label className="block text-xs font-bold text-slate-400 mb-2 uppercase">Crea Stanza Modalità</label>
-      <div className="grid grid-cols-3 gap-2 mb-6">
-        <button onClick={() => handleCreateRoom('KAHOOT')} className="bg-indigo-600 hover:bg-indigo-500 p-2.5 rounded-xl text-[11px] font-bold transition cursor-pointer text-center">
+      <div className="grid grid-cols-2 gap-2 mb-6">
+        <button onClick={() => handleCreateRoom('KAHOOT')} className="bg-indigo-600 hover:bg-indigo-500 p-2.5 rounded-xl text-xs font-bold transition cursor-pointer text-center">
           Kahoot
         </button>
-        <button onClick={() => handleCreateRoom('FASTEST_FINGER')} className="bg-rose-600 hover:bg-rose-500 p-2.5 rounded-xl text-[11px] font-bold transition cursor-pointer text-center">
+        <button onClick={() => handleCreateRoom('FASTEST_FINGER')} className="bg-rose-600 hover:bg-rose-500 p-2.5 rounded-xl text-xs font-bold transition cursor-pointer text-center">
           Duello PG
         </button>
-        <button onClick={() => handleCreateRoom('BLUR_DUEL')} className="bg-amber-600 hover:bg-amber-500 p-2.5 rounded-xl text-[11px] font-bold transition cursor-pointer text-center">
+        <button onClick={() => handleCreateRoom('BLUR_DUEL')} className="bg-amber-600 hover:bg-amber-500 p-2.5 rounded-xl text-xs font-bold transition cursor-pointer text-center">
           Blur Duel
         </button>
-        <button onClick={() => handleCreateRoom('AUDIO_DUEL')} className="bg-purple-600 hover:bg-purple-500 p-2.5 rounded-xl text-[11px] font-bold transition cursor-pointer text-center">
+        <button onClick={() => handleCreateRoom('AUDIO_DUEL')} className="bg-purple-600 hover:bg-purple-500 p-2.5 rounded-xl text-xs font-bold transition cursor-pointer text-center">
           Audio Quiz
         </button>
       </div>
-{/* Personalizzazione Regole Stanza */}
-<div className="bg-slate-800/60 p-4 rounded-2xl mb-6 border border-slate-700/80 space-y-4">
-  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Regole Partita Custom</h3>
-  
-  <div className="grid grid-cols-2 gap-4">
-    <div>
-      <label className="block text-[11px] font-semibold text-slate-300 mb-1.5">Timer per Round</label>
-      <select 
-        value={timerDuration} 
-        onChange={(e) => setTimerDuration(Number(e.target.value))}
-        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-indigo-400 focus:outline-none"
-      >
-        <option value={5}>5 Secondi</option>
-        <option value={10}>10 Secondi</option>
-        <option value={15}>15 Secondi</option>
-        <option value={30}>30 Secondi</option>
-      </select>
-    </div>
 
-    <div>
-      <label className="block text-[11px] font-semibold text-slate-300 mb-1.5">Numero Round</label>
-      <select 
-        value={totalRounds} 
-        onChange={(e) => setTotalRounds(e.target.value)}
-        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-indigo-400 focus:outline-none"
-      >
-        <option value={5}>5 Round</option>
-        <option value={10}>10 Round</option>
-        <option value={20}>20 Round</option>
-        <option value="ENDLESS">Endless (Tutte)</option>
-      </select>
-    </div>
-  </div>
-</div>
       <div className="border-t border-slate-800 pt-6">
         <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Entra con Codice</label>
         <div className="flex gap-2">

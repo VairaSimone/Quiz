@@ -13,27 +13,38 @@ export default function SectionDetail() {
   const [file, setFile] = useState(null);
   const [uploadStatus, setUploadStatus] = useState(null);
   const [editingQuestion, setEditingQuestion] = useState(null);
-
-  const fetchSectionData = async () => {
+const getImageUrl = (path) => {
+  if (!path) return 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=60';
+  return path.startsWith('http') ? path : `${SERVER_URL}${path}`;
+};
+const fetchSectionData = async () => {
     try {
       setLoading(true);
       const [resSection, resLeaderboard] = await Promise.all([
         API.get(`/sections/${id}`),
         API.get(`/quiz/sections/${id}/leaderboard`)
       ]);
-      setSection(resSection.data.data);
-      setLeaderboard(resLeaderboard.data.data);
+
+      const rawData = resSection.data.data;
+      const sectionData = Array.isArray(rawData) ? rawData[0] : rawData;
+
+      if (sectionData) {
+        setSection({
+          ...sectionData,
+          questions: sectionData.questions || []
+        });
+      }
+
+      setLeaderboard(resLeaderboard.data.data || []);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
+useEffect(() => {
     fetchSectionData();
   }, [id]);
-
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
     if (selected && selected.name.endsWith('.docx')) {
@@ -97,11 +108,11 @@ export default function SectionDetail() {
 
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-8 flex flex-col md:flex-row gap-6 items-center justify-between">
         <div className="flex items-center gap-5">
-          <img 
-            src={section.coverImage ? `${SERVER_URL}${section.coverImage}` : 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600'} 
-            alt={section.title}
-            className="w-24 h-24 rounded-xl object-cover border border-slate-700" 
-          />
+<img 
+  src={getImageUrl(section.coverImage)} 
+  alt={section.title}
+  className="w-24 h-24 rounded-xl object-cover border border-slate-700" 
+/>
           <div>
             <h1 className="text-3xl font-extrabold text-white mb-1">{section.title}</h1>
             <p className="text-slate-400 text-sm">{section.description || 'Nessuna descrizione.'}</p>

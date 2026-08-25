@@ -136,12 +136,12 @@ socket.on('create_room', async ({ mode, sectionId, playerName, avatar, timerDura
       : { include: { options: true, section: { select: { title: true } } } };
     questions = await prisma.question.findMany(queryOptions);
   } else if (mode === 'FASTEST_FINGER' || mode === 'BLUR_DUEL') {
-    const charDir = path.join(__dirname, '../../uploads/characters');
+    const charDir = path.join(__dirname, '../../static/characters');
     if (fs.existsSync(charDir)) {
       questions = fs.readdirSync(charDir).filter(f => /\.(png|jpe?g|webp)$/i.test(f));
     }
   } else if (mode === 'AUDIO_DUEL') {
-    const audioDir = path.join(__dirname, '../../uploads/audio');
+    const audioDir = path.join(__dirname, '../../static/audio');
     if (fs.existsSync(audioDir)) {
       questions = fs.readdirSync(audioDir).filter(f => /\.(mp3|wav|ogg|m4a|aac)$/i.test(f));
     }

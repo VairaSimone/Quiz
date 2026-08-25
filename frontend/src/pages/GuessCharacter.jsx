@@ -485,7 +485,7 @@ function getHintText(fileName, timeLeft, totalTime) {
                 className="bg-slate-950/80 border-2 border-slate-800 hover:border-indigo-500 rounded-2xl p-2 h-40 flex items-center justify-center transition cursor-pointer overflow-hidden disabled:opacity-50"
               >
                 <img
-                  src={`${SERVER_URL}/uploads/characters/${encodeURIComponent(fileOpt)}`}
+                  src={`${SERVER_URL}/static/characters/${encodeURIComponent(fileOpt)}`}
                   alt="Opzione"
                   className="max-h-full max-w-full object-contain rounded-lg"
                 />
@@ -499,7 +499,7 @@ function getHintText(fileName, timeLeft, totalTime) {
             {currentFile && (
               <audio
                 key={currentFile}
-                src={`${SERVER_URL}/uploads/audio/${encodeURIComponent(currentFile)}`}
+                src={`${SERVER_URL}/static/audio/${encodeURIComponent(currentFile)}`}
                 autoPlay
                 controls
                 className="w-full"
@@ -513,7 +513,7 @@ function getHintText(fileName, timeLeft, totalTime) {
                 'border-slate-800'
             }`}>
             <img
-              src={`${SERVER_URL}/uploads/characters/${encodeURIComponent(currentFile)}`}
+              src={`${SERVER_URL}/static/characters/${encodeURIComponent(currentFile)}`}
               alt="Indovina il personaggio"
               style={{ filter: `blur(${currentBlur}px)` }}
               className="max-h-full max-w-full object-contain rounded-lg drop-shadow-md transition-all duration-300"

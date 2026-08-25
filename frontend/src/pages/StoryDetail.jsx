@@ -75,7 +75,14 @@ export default function StoryDetail() {
     );
   }
 
-  const messages = story.messages || [];
+let messages = [];
+if (story.messages) {
+  messages = story.messages;
+} else if (Array.isArray(story.content)) {
+  messages = story.content; // Se il JSON di Telegram è un array diretto
+} else if (story.content?.messages) {
+  messages = story.content.messages;
+}
   const participants = Array.from(new Set(messages.map(m => m.from))).filter(Boolean);
   const leftParticipant = participants[0] || '';
 

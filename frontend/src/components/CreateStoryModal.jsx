@@ -59,9 +59,7 @@ export default function CreateStoryModal({ isOpen, onClose, onStoryCreated }) {
 
     try {
       setLoading(true);
-      await API.post('/stories', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+await API.post('/stories', formData);
       setTitle('');
       setDescription('');
       setCoverImage(null);

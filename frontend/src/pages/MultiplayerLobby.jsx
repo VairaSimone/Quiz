@@ -89,7 +89,7 @@ export default function MultiplayerLobby() {
               <li key={i} className="bg-slate-900 px-3 py-2 rounded-xl text-sm font-semibold flex items-center justify-between border border-slate-800">
                 <div className="flex items-center gap-3">
                   {p.avatar ? (
-                    <img src={`${SERVER_URL}/uploads/characters/${encodeURIComponent(p.avatar)}`} alt="Avatar" className="w-8 h-8 rounded-full object-cover border border-indigo-500" />
+                    <img src={`${SERVER_URL}/static/characters/${encodeURIComponent(p.avatar)}`} alt="Avatar" className="w-8 h-8 rounded-full object-cover border border-indigo-500" />
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-xs">?</div>
                   )}
@@ -141,7 +141,7 @@ export default function MultiplayerLobby() {
                   className={`relative shrink-0 w-12 h-12 rounded-full overflow-hidden border-2 transition cursor-pointer ${selectedAvatar === char ? 'border-indigo-500 scale-110 shadow-lg shadow-indigo-500/50' : 'border-slate-700 opacity-60 hover:opacity-100'
                     }`}
                 >
-                  <img src={`${SERVER_URL}/uploads/characters/${encodeURIComponent(char)}`} alt="Avatar" className="w-full h-full object-cover" />
+                  <img src={`${SERVER_URL}/static/characters/${encodeURIComponent(char)}`} alt="Avatar" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>

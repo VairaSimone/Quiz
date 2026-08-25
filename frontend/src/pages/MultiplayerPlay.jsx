@@ -248,7 +248,7 @@ const handlePlayerReaction = (reaction) => {
         <div className="flex justify-center items-end gap-3 mb-8 h-64">
           {top3[1] && (
             <div className="flex flex-col items-center w-1/3">
-              <img src={`${SERVER_URL}/uploads/characters/${encodeURIComponent(top3[1].avatar)}`} className="w-12 h-12 rounded-full border-2 border-slate-300 object-cover mb-1" />
+              <img src={`${SERVER_URL}/static/characters/${encodeURIComponent(top3[1].avatar)}`} className="w-12 h-12 rounded-full border-2 border-slate-300 object-cover mb-1" />
               <span className="text-xs font-bold truncate max-w-full">{top3[1].name}</span>
               <span className="text-[10px] text-slate-400 mb-1">{top3[1].score} pt</span>
               <div className="w-full bg-slate-700 h-32 rounded-t-2xl flex items-center justify-center font-black text-xl border-t-4 border-slate-300">2</div>
@@ -258,7 +258,7 @@ const handlePlayerReaction = (reaction) => {
           {top3[0] && (
             <div className="flex flex-col items-center w-1/3">
               <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
-              <img src={`${SERVER_URL}/uploads/characters/${encodeURIComponent(top3[0].avatar)}`} className="w-16 h-16 rounded-full border-4 border-amber-400 object-cover mb-1 shadow-lg shadow-amber-500/50" />
+              <img src={`${SERVER_URL}/static/characters/${encodeURIComponent(top3[0].avatar)}`} className="w-16 h-16 rounded-full border-4 border-amber-400 object-cover mb-1 shadow-lg shadow-amber-500/50" />
               <span className="text-sm font-black truncate max-w-full text-amber-300">{top3[0].name}</span>
               <span className="text-xs text-amber-400 font-bold mb-1">{top3[0].score} pt</span>
               <div className="w-full bg-amber-600 h-44 rounded-t-2xl flex items-center justify-center font-black text-2xl border-t-4 border-amber-300 shadow-xl">1</div>
@@ -267,7 +267,7 @@ const handlePlayerReaction = (reaction) => {
 
           {top3[2] && (
             <div className="flex flex-col items-center w-1/3">
-              <img src={`${SERVER_URL}/uploads/characters/${encodeURIComponent(top3[2].avatar)}`} className="w-12 h-12 rounded-full border-2 border-amber-700 object-cover mb-1" />
+              <img src={`${SERVER_URL}/static/characters/${encodeURIComponent(top3[2].avatar)}`} className="w-12 h-12 rounded-full border-2 border-amber-700 object-cover mb-1" />
               <span className="text-xs font-bold truncate max-w-full">{top3[2].name}</span>
               <span className="text-[10px] text-slate-400 mb-1">{top3[2].score} pt</span>
               <div className="w-full bg-amber-900/80 h-24 rounded-t-2xl flex items-center justify-center font-black text-xl border-t-4 border-amber-700">3</div>
@@ -303,7 +303,7 @@ const handlePlayerReaction = (reaction) => {
       <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-none">
         {players.map((p, i) => (
           <div key={i} className="bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-xs flex items-center gap-2.5 shrink-0">
-            {p.avatar && <img src={`${SERVER_URL}/uploads/characters/${encodeURIComponent(p.avatar)}`} className="w-6 h-6 rounded-full object-cover" />}
+            {p.avatar && <img src={`${SERVER_URL}/static/characters/${encodeURIComponent(p.avatar)}`} className="w-6 h-6 rounded-full object-cover" />}
             <div>
               <span className="font-bold block text-slate-200">{p.name}</span>
               <span className="text-indigo-400 font-extrabold">{p.score} pt</span>
@@ -359,7 +359,7 @@ const handlePlayerReaction = (reaction) => {
         {currentCharFile && (
           <audio
             key={currentCharFile}
-            src={`${SERVER_URL}/uploads/audio/${encodeURIComponent(currentCharFile)}`}
+            src={`${SERVER_URL}/static/audio/${encodeURIComponent(currentCharFile)}`}
             autoPlay
             controls
             className="w-full max-w-md mt-2"
@@ -372,7 +372,7 @@ const handlePlayerReaction = (reaction) => {
               {currentCharFile ? (
                 <img
                   key={currentCharFile}
-                  src={`${SERVER_URL}/uploads/characters/${encodeURIComponent(currentCharFile)}`}
+                  src={`${SERVER_URL}/static/characters/${encodeURIComponent(currentCharFile)}`}
                   alt="Personaggio"
                   style={{ filter: `blur(${blurPx}px)` }}
                   className="max-h-full max-w-full object-contain rounded-lg transition-all duration-300"

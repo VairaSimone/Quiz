@@ -143,8 +143,7 @@ exports.getSectionLeaderboard = async (req, res) => {
 
 exports.getCharacters = async (req, res) => {
   try {
-    // Risolviamo il percorso per arrivare a frontend/public/characters
-const charactersDir = path.join(__dirname, '../../uploads/characters');
+const charactersDir = path.join(__dirname, '../../static/characters');
 
     // Se la cartella non esiste ancora, restituiamo un array vuoto
     if (!fs.existsSync(charactersDir)) {
@@ -165,7 +164,7 @@ const charactersDir = path.join(__dirname, '../../uploads/characters');
 
 exports.getAudioFiles = async (req, res) => {
   try {
-    const audioDir = path.join(__dirname, '../../uploads/audio');
+    const audioDir = path.join(__dirname, '../../static/audio');
     if (!fs.existsSync(audioDir)) {
       fs.mkdirSync(audioDir, { recursive: true });
       return res.status(200).json({ success: true, data: [] });

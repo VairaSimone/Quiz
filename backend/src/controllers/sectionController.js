@@ -2,6 +2,23 @@ const prisma = require('../config/db');
 const fs = require('fs');
 const path = require('path');
 
+const cloudinary = require('../config/cloudinary');
+
+const deleteFromCloudinary = async (imageUrl) => {
+  if (!imageUrl) return;
+
+  try {
+    // Estrae il public_id dall'URL (es: da ".../quiz_covers/abc123.jpg" a "quiz_covers/abc123")
+    const parts = imageUrl.split('/');
+    const folderAndFile = parts.slice(-2).join('/'); // "quiz_covers/abc123.jpg"
+    const publicId = folderAndFile.substring(0, folderAndFile.lastIndexOf('.')); // "quiz_covers/abc123"
+
+    await cloudinary.uploader.destroy(publicId);
+  } catch (error) {
+    console.error('Errore durante l\'eliminazione dell\'immagine da Cloudinary:', error);
+  }
+};
+
 // 1. Ottieni tutte le sezioni con il conteggio delle domande
 exports.getAllSections = async (req, res) => {
   try {
@@ -61,7 +78,7 @@ exports.createSection = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Una sezione con questo nome esiste già' });
     }
 
-    const coverImage = req.file ? `/uploads/covers/${req.file.filename}` : null;
+const coverImage = req.file ? req.file.path : null;
 
     const newSection = await prisma.section.create({
       data: {
@@ -79,26 +96,27 @@ exports.createSection = async (req, res) => {
 
 // 4. Elimina una sezione ed i file locali associati
 exports.deleteSection = async (req, res) => {
-  const { id } = req.params;
   try {
-    const section = await prisma.section.findUnique({ where: { id } });
+    const { id } = req.params;
+
+    const section = await prisma.section.findUnique({
+      where: { id } // Rimosso parseInt
+    });
 
     if (!section) {
-      return res.status(404).json({ success: false, message: 'Sezione non trovata' });
+      return res.status(404).json({ error: 'Sezione non trovata' });
     }
 
-    // Rimozione immagine dal filesystem
     if (section.coverImage) {
-      const imagePath = path.join(__dirname, '../../', section.coverImage);
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
-      }
+      await deleteFromCloudinary(section.coverImage);
     }
 
-    await prisma.section.delete({ where: { id } });
+    await prisma.section.delete({
+      where: { id } // Rimosso parseInt
+    });
 
-    res.status(200).json({ success: true, message: 'Sezione eliminata con successo' });
+    res.json({ message: 'Sezione ed eventuale copertina eliminate con successo' });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Errore durante l\'eliminazione della sezione', error: error.message });
+    res.status(500).json({ error: 'Errore durante l\'eliminazione della sezione' });
   }
 };

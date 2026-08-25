@@ -8,7 +8,10 @@ export default function StoriesList({ isAdmin }) {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+const getImageUrl = (path) => {
+  if (!path) return 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=60';
+  return path.startsWith('http') ? path : `${SERVER_URL}${path}`;
+};
   // Determina se l'utente è un Admin verificando anche il localStorage
   const hasAdminAuth = isAdmin || Boolean(localStorage.getItem('adminPassword'));
 
@@ -79,10 +82,7 @@ export default function StoriesList({ isAdmin }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {stories.map(story => {
-            const cover = story.coverImage 
-              ? `${SERVER_URL}${story.coverImage}`
-              : 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&auto=format&fit=crop&q=60';
-
+const cover = getImageUrl(story.coverImage);
             return (
               <div key={story.id} className="bg-slate-900 rounded-2xl border border-slate-800 hover:border-slate-700 transition flex flex-col overflow-hidden shadow-xl group">
                 <div className="relative h-48 w-full overflow-hidden bg-slate-950">

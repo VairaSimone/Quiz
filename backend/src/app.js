@@ -21,6 +21,7 @@ app.use(cors());
 // Aumento dei limiti del body parser a 100MB per evitare il blocco su payload JSON estesi
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
+app.use('/static', express.static(path.join(process.cwd(), 'static')));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.use('/api/sections', sectionRoutes);

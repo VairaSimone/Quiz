@@ -97,7 +97,7 @@ await API.post('/stories', formData);
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="es. Capitolo 1 - Cometa"
+                placeholder="es. WK suisei"
                 className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 font-bold"
               />
             </div>

@@ -102,7 +102,7 @@ export default function App() {
   {/* Altre Rotte */}
   <Route path="/play/:id" element={<QuizPlay />} />
   <Route path="/stories" element={<StoriesList refreshTrigger={refreshTrigger} isAdmin={isAdmin} />} />
-  <Route path="/story/:id" element={<StoryDetail />} />
+  <Route path="/stories/:id" element={<StoryDetail />} />
   <Route path="/guess-character" element={<GuessCharacter />} />
   <Route path="/multiplayer" element={<MultiplayerLobby />} />
   <Route path="/multiplayer-play" element={<MultiplayerPlay />} />

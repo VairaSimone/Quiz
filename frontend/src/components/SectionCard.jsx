@@ -4,20 +4,18 @@ import { Play, FileText, Trash2, Settings } from 'lucide-react';
 import { SERVER_URL } from '../api/client';
 
 export default function SectionCard({ section, onDelete, isAdmin }) {
-
-    const imageUrl = (path) => {
-  if (!path) return 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=60';
-  return path.startsWith('http') ? path : `${SERVER_URL}${path}`;
-};
+  const imageUrl = section.coverImage 
+    ? `${SERVER_URL}${section.coverImage}`
+    : 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=60';
 
   return (
     <div className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700 hover:border-slate-600 transition flex flex-col shadow-lg">
       <div className="relative h-48 w-full overflow-hidden group">
-<img 
-  src={imageUrl(section.coverImage)} 
-  alt={section.title}
-  className="w-full h-full object-cover group-hover:scale-105 transition duration-300" 
-/>
+        <img 
+          src={imageUrl} 
+          alt={section.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition duration-300" 
+        />
         {isAdmin && (
           <button
             onClick={(e) => {

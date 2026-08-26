@@ -16,8 +16,8 @@ export default function Home() {
       btnBg: 'bg-indigo-600 hover:bg-indigo-500'
     },
     {
-      title: 'Visual Novel Telegram',
-      description: 'Leggi i racconti interattivi scritti nel nostro gruppo Telegram con scenari e immagini.',
+      title: 'I nostri anime',
+      description: 'Leggi i racconti.',
       icon: BookOpen,
       path: '/stories',
       badge: 'Storie & VN',

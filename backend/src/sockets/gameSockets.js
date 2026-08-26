@@ -1,9 +1,9 @@
 const prisma = require('../config/db');
-const fs = require('fs');
+const fsPromises = require('fs').promises; 
+const fs = require('fs'); // Manteniamo questo per fs.existsSync()
 const path = require('path');
 
 const rooms = new Map();
-const MAX_ROUNDS = 10; // Limite fisso di 10 round casuali per partita
 
 function generateRoomCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -15,53 +15,76 @@ function getFirstName(filename) {
   return nameWithoutExt.trim().split(/\s+/)[0];
 }
 
-function clearRoomTimers(room) {
-  if (!room) return;
-  if (room.timer) {
-    clearInterval(room.timer);
-    room.timer = null;
-  }
-  if (room.roundTimeout) {
-    clearTimeout(room.roundTimeout);
-    room.roundTimeout = null;
-  }
-}
-
 module.exports = function setupGameSockets(io) {
 
-  function startRoundTimer(roomCode) {
-  const room = rooms.get(roomCode);
-  if (!room) return;
-
-  clearRoomTimers(room);
-
-  if (room.currentIndex >= room.questions.length) {
-    room.status = 'ENDED';
-    const sortedPlayers = [...room.players].sort((a, b) => b.score - a.score);
-    io.to(roomCode).emit('game_over', sortedPlayers);
-    return;
+  function clearRoomTimers(room) {
+    if (!room) return;
+    if (room.timer) {
+      clearInterval(room.timer);
+      room.timer = null;
+    }
+    if (room.roundTimeout) {
+      clearTimeout(room.roundTimeout);
+      room.roundTimeout = null;
+    }
   }
 
-  room.timeLeft = room.timerDuration || 15; // Usa il timer personalizzato della stanza
-  room.status = 'PLAYING';
-  room.lockedRound = false;
+  function removePlayerFromRoom(socket, roomCode) {
+    const room = rooms.get(roomCode);
+    if (!room) return;
 
-  room.players.forEach(p => {
-    p.hasAnswered = false;
-    p.cooldownUntil = 0;
-  });
+    socket.leave(roomCode);
+    room.players = room.players.filter(p => p.id !== socket.id);
 
-  const currentQ = room.questions[room.currentIndex];
+    if (room.players.length === 0) {
+      clearRoomTimers(room);
+      rooms.delete(roomCode);
+    } else {
+      io.to(roomCode).emit('player_list_updated', room.players);
+    }
+  }
 
-io.to(roomCode).emit('next_question_ready', {
-  currentQuestion: currentQ,
-  audioLang: room.audioLang, // <-- Invia la lingua selezionata per la stanza
-  currentIndex: room.currentIndex,
-  total: room.questions.length,
-  timeLeft: room.timeLeft,
-  timerDuration: room.timerDuration,
-  players: room.players
-});
+  function removePlayerFromAllRooms(socket) {
+    rooms.forEach((room, code) => {
+      if (room.players.some(p => p.id === socket.id)) {
+        removePlayerFromRoom(socket, code);
+      }
+    });
+  }
+
+  function startRoundTimer(roomCode) {
+    const room = rooms.get(roomCode);
+    if (!room) return;
+
+    clearRoomTimers(room);
+
+    if (room.currentIndex >= room.questions.length) {
+      room.status = 'ENDED';
+      const sortedPlayers = [...room.players].sort((a, b) => b.score - a.score);
+      io.to(roomCode).emit('game_over', sortedPlayers);
+      return;
+    }
+
+    room.timeLeft = room.timerDuration || 15;
+    room.status = 'PLAYING';
+    room.lockedRound = false;
+
+    room.players.forEach(p => {
+      p.hasAnswered = false;
+      p.cooldownUntil = 0;
+    });
+
+    const currentQ = room.questions[room.currentIndex];
+
+    io.to(roomCode).emit('next_question_ready', {
+      currentQuestion: currentQ,
+      audioLang: room.audioLang,
+      currentIndex: room.currentIndex,
+      total: room.questions.length,
+      timeLeft: room.timeLeft,
+      timerDuration: room.timerDuration,
+      players: room.players
+    });
 
     room.timer = setInterval(() => {
       const liveRoom = rooms.get(roomCode);
@@ -125,63 +148,73 @@ io.to(roomCode).emit('next_question_ready', {
 
   io.on('connection', (socket) => {
 
-// backend/src/sockets/gameSockets.js
+    socket.on('create_room', async ({ mode, sectionId, playerName, avatar, timerDuration = 15, totalRounds = 10, audioLang = 'jp' }) => {
+      removePlayerFromAllRooms(socket); 
 
-socket.on('create_room', async ({ mode, sectionId, playerName, avatar, timerDuration = 15, totalRounds = 10, audioLang = 'jp' }) => {
-  const roomCode = generateRoomCode();
-  let questions = [];
+      const roomCode = generateRoomCode();
+      let questions = [];
 
-  if (mode === 'KAHOOT') {
-    const queryOptions = sectionId
-      ? { where: { sectionId }, include: { options: true, section: { select: { title: true } } } }
-      : { include: { options: true, section: { select: { title: true } } } };
-    questions = await prisma.question.findMany(queryOptions);
-  } else if (mode === 'FASTEST_FINGER' || mode === 'BLUR_DUEL') {
-    const charDir = path.join(__dirname, '../../static/characters');
-    if (fs.existsSync(charDir)) {
-      questions = fs.readdirSync(charDir).filter(f => /\.(png|jpe?g|webp)$/i.test(f));
-    }
-  } else if (mode === 'AUDIO_DUEL') {
-    // Seleziona la sottocartella in base alla lingua scelta ('jp' o 'it')
-    const selectedLang = ['jp', 'it'].includes(audioLang) ? audioLang : 'jp';
-    const audioDir = path.join(__dirname, `../../static/audio/${selectedLang}`);
-    
-    if (fs.existsSync(audioDir)) {
-      questions = fs.readdirSync(audioDir).filter(f => /\.(mp3|wav|ogg|m4a|aac)$/i.test(f));
-    }
-  }
+      try {
+        if (mode === 'KAHOOT') {
+          const queryOptions = sectionId
+            ? { where: { sectionId }, include: { options: true, section: { select: { title: true } } } }
+            : { include: { options: true, section: { select: { title: true } } } };
+          questions = await prisma.question.findMany(queryOptions);
+        } else if (mode === 'FASTEST_FINGER' || mode === 'BLUR_DUEL') {
+          const charDir = path.join(__dirname, '../../static/characters');
+          if (fs.existsSync(charDir)) {
+            const files = await fsPromises.readdir(charDir);
+            questions = files.filter(f => /\.(png|jpe?g|webp)$/i.test(f));
+          }
+        } else if (mode === 'AUDIO_DUEL') {
+          const selectedLang = ['jp', 'it'].includes(audioLang) ? audioLang : 'jp';
+          const audioDir = path.join(__dirname, `../../static/audio/${selectedLang}`);
+          if (fs.existsSync(audioDir)) {
+            const files = await fsPromises.readdir(audioDir);
+            questions = files.filter(f => /\.(mp3|wav|ogg|m4a|aac)$/i.test(f));
+          }
+        }
+      } catch (error) {
+        console.error("Errore durante la creazione della stanza:", error);
+        return socket.emit('error_msg', 'Errore server durante il caricamento dei dati.');
+      }
 
-  if (questions.length === 0) {
-    return socket.emit('error_msg', 'Nessuna domanda o file audio disponibile per questa modalità');
-  }
+      if (questions.length === 0) {
+        return socket.emit('error_msg', 'Nessuna domanda o file audio disponibile per questa modalità');
+      }
 
-  const maxLimit = totalRounds === 'ENDLESS' ? questions.length : Math.min(Number(totalRounds), questions.length);
-  questions = questions.sort(() => 0.5 - Math.random()).slice(0, maxLimit);
+      const selectedTimer = Number(timerDuration) > 0 ? Number(timerDuration) : 15;
+      const parsedRounds = Number(totalRounds);
+      const maxLimit = (totalRounds === 'ENDLESS' || isNaN(parsedRounds)) 
+        ? questions.length 
+        : Math.min(Math.max(1, parsedRounds), questions.length);
 
-  const selectedTimer = Number(timerDuration) || 15;
+      questions = questions.sort(() => 0.5 - Math.random()).slice(0, maxLimit);
 
-  const newRoom = {
-    code: roomCode,
-    mode,
-    audioLang, // Salviamo la lingua scelta nella stanza
-    hostId: socket.id,
-    status: 'LOBBY',
-    currentIndex: 0,
-    questions,
-    players: [{ id: socket.id, name: playerName, avatar, score: 0, streak: 0, hasAnswered: false, cooldownUntil: 0 }],
-    lockedRound: false,
-    timer: null,
-    roundTimeout: null,
-    timerDuration: selectedTimer,
-    timeLeft: selectedTimer
-  };
+      const newRoom = {
+        code: roomCode,
+        mode,
+        audioLang,
+        hostId: socket.id,
+        status: 'LOBBY',
+        currentIndex: 0,
+        questions,
+        players: [{ id: socket.id, name: playerName, avatar, score: 0, streak: 0, hasAnswered: false, cooldownUntil: 0 }],
+        lockedRound: false,
+        timer: null,
+        roundTimeout: null,
+        timerDuration: selectedTimer,
+        timeLeft: selectedTimer
+      };
 
-  rooms.set(roomCode, newRoom);
-  socket.join(roomCode);
-  socket.emit('room_created', { roomCode, room: newRoom });
-});
+      rooms.set(roomCode, newRoom);
+      socket.join(roomCode);
+      socket.emit('room_created', { roomCode, room: newRoom });
+    });
 
     socket.on('join_room', ({ roomCode, playerName, avatar }) => {
+      removePlayerFromAllRooms(socket); 
+
       const room = rooms.get(roomCode);
       if (!room) return socket.emit('error_msg', 'Stanza non trovata');
       if (room.status !== 'LOBBY') return socket.emit('error_msg', 'Partita già iniziata');
@@ -193,25 +226,38 @@ socket.on('create_room', async ({ mode, sectionId, playerName, avatar, timerDura
       socket.emit('joined_successfully', { roomCode, room });
     });
 
-    socket.on('start_game', ({ roomCode }) => {
-      const room = rooms.get(roomCode);
-      if (!room || room.hostId !== socket.id || room.status !== 'LOBBY') return;
-
-      room.currentIndex = 0;
-io.to(roomCode).emit('game_started', {
-  roomCode: room.code,
-  mode: room.mode,
-  audioLang: room.audioLang,
-  total: room.questions.length,
-  currentIndex: 0,
-  currentQuestion: room.questions[0],
-  players: room.players,
-  timeLeft: room.timerDuration,
-  timerDuration: room.timerDuration
-});
-
-      startRoundTimer(roomCode);
+    socket.on('leave_room', ({ roomCode }) => {
+      if (roomCode) {
+        removePlayerFromRoom(socket, roomCode);
+      } else {
+        removePlayerFromAllRooms(socket);
+      }
     });
+
+socket.on('start_game', ({ roomCode }) => {
+  const room = rooms.get(roomCode);
+  if (!room || room.hostId !== socket.id || room.status !== 'LOBBY') return;
+
+  room.currentIndex = 0;
+  
+  // 1. Notifica a tutti i client di cambiare pagina
+  io.to(roomCode).emit('game_started', {
+    roomCode: room.code,
+    mode: room.mode,
+    audioLang: room.audioLang,
+    total: room.questions.length,
+    currentIndex: 0,
+    currentQuestion: room.questions[0],
+    players: room.players,
+    timeLeft: room.timerDuration,
+    timerDuration: room.timerDuration
+  });
+
+  // 2. Attendi 500ms per consentire a tutti i client React di fare la navigate() e registrare i listener socket
+  setTimeout(() => {
+    startRoundTimer(roomCode);
+  }, 500);
+});
 
     socket.on('submit_kahoot_answer', ({ roomCode, answer }) => {
       const room = rooms.get(roomCode);
@@ -226,8 +272,7 @@ io.to(roomCode).emit('game_started', {
       const normUser = answer.toLowerCase().trim();
       const normCorrect = q ? q.correctAnswer.toLowerCase().trim() : '';
 
-      // Confronto esatto o contenimento della stringa
-      const isCorrect = normUser === normCorrect || (normCorrect.length > 0 && normCorrect.includes(normUser));
+      const isCorrect = normUser === normCorrect;
 
       if (isCorrect) {
         player.streak += 1;
@@ -303,15 +348,7 @@ io.to(roomCode).emit('game_started', {
     });
 
     socket.on('disconnect', () => {
-      rooms.forEach((room, code) => {
-        room.players = room.players.filter(p => p.id !== socket.id);
-        if (room.players.length === 0) {
-          clearRoomTimers(room);
-          rooms.delete(code);
-        } else {
-          io.to(code).emit('player_list_updated', room.players);
-        }
-      });
+      removePlayerFromAllRooms(socket);
     });
   });
 };

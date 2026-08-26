@@ -26,9 +26,8 @@ export default function Navbar({
   const isActive = (path) => location.pathname === path;
 
   const navLinks = [
-    { name: 'Home', path: '/', icon: HomeIcon },
-    { name: 'Quiz Anime', path: '/quizzes', icon: Gamepad2 },
-    { name: 'Racconti', path: '/stories', icon: BookOpen },
+    { name: 'Quiz', path: '/quizzes', icon: Gamepad2 },
+    { name: 'Anime', path: '/stories', icon: BookOpen },
     { name: 'Indovina Personaggio', path: '/guess-character', icon: UserCheck },
     { name: 'Multiplayer', path: '/multiplayer', icon: Users },
   ];
@@ -40,9 +39,6 @@ export default function Navbar({
           
           {/* Logo & Brand */}
           <Link to="/" className="flex items-center gap-2 text-xl font-black text-white tracking-wide">
-            <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/30">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
             <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
               Wonderful Hub
             </span>

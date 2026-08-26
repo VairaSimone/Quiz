@@ -5,64 +5,89 @@ import API, { SERVER_URL } from '../api/client';
 
 export default function MultiplayerLobby() {
   const [playerName, setPlayerName] = useState(localStorage.getItem('playerName') || '');
+  const [selectedAvatar, setSelectedAvatar] = useState(localStorage.getItem('playerAvatar') || null);
+
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [activeRoom, setActiveRoom] = useState(null);
   const [isHost, setIsHost] = useState(false);
   const [characters, setCharacters] = useState([]);
-  const [selectedAvatar, setSelectedAvatar] = useState(null);
   const navigate = useNavigate();
   const [timerDuration, setTimerDuration] = useState(15);
   const [totalRounds, setTotalRounds] = useState(10);
-  const [audioLang, setAudioLang] = useState('jp'); // 'jp' o 'it'
+  const [audioLang, setAudioLang] = useState('jp'); 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+
+  const handleNameChange = (name) => {
+    setPlayerName(name);
+    localStorage.setItem('playerName', name);
+  };
+
+  const handleAvatarSelect = (avatar) => {
+    setSelectedAvatar(avatar);
+    localStorage.setItem('playerAvatar', avatar);
+  };
 
   useEffect(() => {
+    let isMounted = true;
+
     API.get('/quiz/characters')
       .then(res => {
-        if (res.data.data.length > 0) {
+        if (isMounted && res.data.data.length > 0) {
           setCharacters(res.data.data);
-          setSelectedAvatar(res.data.data[0]);
+          const savedAvatar = localStorage.getItem('playerAvatar');
+          if (!savedAvatar || !res.data.data.includes(savedAvatar)) {
+            setSelectedAvatar(res.data.data[0]);
+            localStorage.setItem('playerAvatar', res.data.data[0]);
+          }
         }
       })
       .catch(console.error);
 
     if (!socket.connected) socket.connect();
 
-    socket.on('room_created', ({ room }) => {
+    const handleRoomCreated = ({ room }) => {
       setActiveRoom(room);
       setIsHost(true);
-    });
+    };
 
-    socket.on('joined_successfully', ({ room }) => {
+    const handleJoinedSuccessfully = ({ room }) => {
       setActiveRoom(room);
       setIsHost(false);
-    });
+    };
 
-    socket.on('player_list_updated', (players) => {
+    const handlePlayerListUpdated = (players) => {
       setActiveRoom(prev => prev ? { ...prev, players } : null);
-    });
+    };
 
-    socket.on('error_msg', (msg) => alert(msg));
+    const handleErrorMsg = (msg) => alert(msg);
 
-    socket.on('game_started', (data) => {
-      if (playerName.trim()) localStorage.setItem('playerName', playerName.trim());
-      navigate('/multiplayer-play', { state: { gameData: data, isHost } });
-    });
+    const handleGameStarted = (data) => {
+      navigate('/multiplayer-play', { state: { gameData: data } });
+    };
+
+    socket.on('room_created', handleRoomCreated);
+    socket.on('joined_successfully', handleJoinedSuccessfully);
+    socket.on('player_list_updated', handlePlayerListUpdated);
+    socket.on('error_msg', handleErrorMsg);
+    socket.on('game_started', handleGameStarted);
 
     return () => {
-      socket.off('room_created');
-      socket.off('joined_successfully');
-      socket.off('player_list_updated');
-      socket.off('error_msg');
-      socket.off('game_started');
+      isMounted = false; 
+      socket.off('room_created', handleRoomCreated);
+      socket.off('joined_successfully', handleJoinedSuccessfully);
+      socket.off('player_list_updated', handlePlayerListUpdated);
+      socket.off('error_msg', handleErrorMsg);
+      socket.off('game_started', handleGameStarted);
     };
-  }, [navigate, isHost, playerName]);
+  }, [navigate]);
 
   const handleCreateRoom = (mode) => {
     if (!playerName.trim()) return alert('Inserisci un nickname!');
     socket.emit('create_room', {
       mode,
       playerName,
-      avatar: selectedAvatar, // Corretto: passa lo stato selectedAvatar
+      avatar: selectedAvatar,
       timerDuration,
       totalRounds,
       audioLang
@@ -91,7 +116,12 @@ export default function MultiplayerLobby() {
               <li key={i} className="bg-slate-900 px-3 py-2 rounded-xl text-sm font-semibold flex items-center justify-between border border-slate-800">
                 <div className="flex items-center gap-3">
                   {p.avatar ? (
-                    <img src={`${SERVER_URL}/static/characters/${encodeURIComponent(p.avatar)}`} alt="Avatar" className="w-8 h-8 rounded-full object-cover border border-indigo-500" />
+                    <img 
+                      src={`${SERVER_URL}/static/characters/${encodeURIComponent(p.avatar)}`} 
+                      alt="Avatar" 
+                      onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/150/4f46e5/ffffff?text=?'; }}
+                      className="w-8 h-8 rounded-full object-cover border border-indigo-500" 
+                    />
                   ) : (
                     <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-xs">?</div>
                   )}
@@ -124,34 +154,103 @@ export default function MultiplayerLobby() {
           <input
             type="text"
             value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
+            onChange={(e) => handleNameChange(e.target.value)}
             placeholder="es. OtakuKing"
             className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold focus:outline-none focus:border-indigo-500"
           />
         </div>
 
-        {/* Selezione Avatar */}
-        {characters.length > 0 && (
-          <div>
-            <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Scegli Avatar</label>
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
-              {characters.slice(0, 15).map((char, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setSelectedAvatar(char)}
-                  className={`relative shrink-0 w-12 h-12 rounded-full overflow-hidden border-2 transition cursor-pointer ${selectedAvatar === char ? 'border-indigo-500 scale-110 shadow-lg shadow-indigo-500/50' : 'border-slate-700 opacity-60 hover:opacity-100'
-                    }`}
-                >
-                  <img src={`${SERVER_URL}/static/characters/${encodeURIComponent(char)}`} alt="Avatar" className="w-full h-full object-cover" />
-                </button>
-              ))}
+        <div>
+          <label className="block text-xs font-bold text-slate-400 mb-1.5 uppercase">Avatar Selezionato</label>
+          
+          <div className="flex items-center gap-3 bg-slate-800 p-2.5 rounded-2xl border border-slate-700">
+            {selectedAvatar ? (
+              <img 
+                src={`${SERVER_URL}/static/characters/${encodeURIComponent(selectedAvatar)}`} 
+                alt="Selected Avatar" 
+                onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/150/4f46e5/ffffff?text=?'; }}
+                className="w-12 h-12 rounded-full object-cover border-2 border-indigo-500 shadow-md" 
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center font-bold">?</div>
+            )}
+            
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold truncate text-slate-200">
+                {selectedAvatar ? selectedAvatar.replace(/\.[^/.]+$/, "") : "Nessuno"}
+              </p>
+              <p className="text-[10px] text-slate-400">Clicca per cambiare tra 150+ PG</p>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setIsAvatarModalOpen(true)}
+              className="bg-indigo-600 hover:bg-indigo-500 text-xs font-bold px-3 py-2 rounded-xl transition cursor-pointer"
+            >
+              Sfoglia Tutti
+            </button>
           </div>
-        )}
+
+          {isAvatarModalOpen && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-slate-700 rounded-3xl w-full max-w-md max-h-[80vh] flex flex-col p-5 shadow-2xl">
+                
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-extrabold text-lg text-indigo-400">Scegli il tuo Avatar</h3>
+                  <button 
+                    onClick={() => setIsAvatarModalOpen(false)}
+                    className="text-slate-400 hover:text-white font-bold text-lg px-2"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="mb-4">
+                  <input
+                    type="text"
+                    placeholder="Cerca personaggio..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-xs font-semibold text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div className="overflow-y-auto pr-1 grid grid-cols-4 gap-3 scrollbar-thin">
+                  {characters
+                    .filter((char) => char.toLowerCase().includes(searchTerm.toLowerCase()))
+                    .map((char, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => {
+                          handleAvatarSelect(char);
+                          setIsAvatarModalOpen(false);
+                        }}
+                        className={`relative group flex flex-col items-center p-1.5 rounded-2xl border-2 transition cursor-pointer ${
+                          selectedAvatar === char 
+                            ? 'border-indigo-500 bg-indigo-500/10 scale-105' 
+                            : 'border-slate-800 hover:border-slate-600 bg-slate-800/50'
+                        }`}
+                      >
+                        <img 
+                          src={`${SERVER_URL}/static/characters/${encodeURIComponent(char)}`} 
+                          alt={char} 
+                          onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/150/4f46e5/ffffff?text=?'; }}
+                          loading="lazy"
+                          className="w-12 h-12 rounded-full object-cover" 
+                        />
+                        <span className="text-[9px] font-bold mt-1 text-slate-300 truncate w-full text-center">
+                          {char.replace(/\.[^/.]+$/, "")}
+                        </span>
+                      </button>
+                    ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Regole Partita Custom */}
       <div className="bg-slate-800/60 p-4 rounded-2xl mb-6 border border-slate-700/80 space-y-4">
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Regole Partita Custom</h3>
         
@@ -185,7 +284,6 @@ export default function MultiplayerLobby() {
           </div>
         </div>
 
-        {/* Selezione Lingua Audio */}
         <div className="pt-2 border-t border-slate-700/50">
           <label className="block text-[11px] font-semibold text-slate-300 mb-2">Lingua Audio (Audio Quiz)</label>
           <div className="flex gap-3">

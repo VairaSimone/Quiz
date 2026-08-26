@@ -5,6 +5,8 @@ import { SERVER_URL } from '../api/client';
 import confetti from 'canvas-confetti';
 import { Trophy, Timer, Flame, Sparkles } from 'lucide-react';
 
+let sharedAudioCtx = null;
+
 export default function MultiplayerPlay() {
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -12,12 +14,14 @@ export default function MultiplayerPlay() {
   const gameData = state?.gameData || {};
   const roomCode = gameData.roomCode;
   const mode = gameData.mode;
-const [audioLang, setAudioLang] = useState(gameData.audioLang || 'jp');
+  const [audioLang, setAudioLang] = useState(gameData.audioLang || 'jp');
   const [currentQuestion, setCurrentQuestion] = useState(gameData.currentQuestion || null);
   const [currentIndex, setCurrentIndex] = useState(gameData.currentIndex || 0);
   const [totalRounds, setTotalRounds] = useState(gameData.total || 10);
   const [players, setPlayers] = useState(gameData.players || []);
   const [timeLeft, setTimeLeft] = useState(gameData.timeLeft || 15);
+  const [timerDuration, setTimerDuration] = useState(gameData.timerDuration || 15);
+
   const [winnerMessage, setWinnerMessage] = useState(null);
   const [userInput, setUserInput] = useState('');
   const [kahootInput, setKahootInput] = useState('');
@@ -26,58 +30,64 @@ const [audioLang, setAudioLang] = useState(gameData.audioLang || 'jp');
   const [reactions, setReactions] = useState([]);
   const [gameOverPlayers, setGameOverPlayers] = useState(null);
   const [isEmojiOnCooldown, setIsEmojiOnCooldown] = useState(false);
-const EMOJI_SOUNDS = {
-  '😱': '/sounds/nani.mp3',
-  '🔥': '/sounds/boom.mp3',
-  '🎉': '/sounds/tada.mp3',
-  '👏': '/sounds/clap.mp3',
-  '💀': '/sounds/fail.mp3',
-  '💩': '/sounds/fail2.mp3',
-};
 
-const playEmojiSound = (emoji) => {
-  const soundPath = EMOJI_SOUNDS[emoji];
-  if (soundPath) {
-    const audio = new Audio(soundPath);
-    audio.volume = 0.6; // Mantiene un volume gradevole per non sovraccaricare l'audio
-    audio.play().catch(e => console.log('Audio blocked by browser policy:', e));
+  const EMOJI_SOUNDS = {
+    '😱': '/sounds/nani.mp3',
+    '🔥': '/sounds/boom.mp3',
+    '🎉': '/sounds/tada.mp3',
+    '👏': '/sounds/clap.mp3',
+    '💀': '/sounds/fail.mp3',
+    '💩': '/sounds/fail2.mp3',
+  };
+
+  const playEmojiSound = (emoji) => {
+    const soundPath = EMOJI_SOUNDS[emoji];
+    if (soundPath) {
+      const audio = new Audio(soundPath);
+      audio.volume = 0.6;
+      audio.play().catch(e => console.log('Audio blocked by browser policy:', e));
+    }
+  };
+
+  function getHintText(fileName, timeLeft, totalTime) {
+    if (!fileName || totalTime <= 0) return '';
+    const firstName = (fileName.substring(0, fileName.lastIndexOf('.')) || fileName).trim().split(/\s+/)[0];
+    const cleanName = firstName.trim();
+    const len = cleanName.length;
+    const ratio = timeLeft / totalTime;
+
+    if (ratio > 0.6) return null;
+
+    if (ratio > 0.3) {
+      const blanks = cleanName.split('').map(() => '_').join(' ');
+      return `💡 Indizio: ${len} lettere (${blanks})`;
+    }
+
+    const revealed = cleanName.split('').map((char, i) => {
+      if (i === 0 || i % 3 === 0) return char.toUpperCase();
+      return '_';
+    }).join(' ');
+
+    return `💡 Indizio: ${len} lettere (${revealed})`;
   }
-};
 
-// Helper per calcolare l'indizio dinamico sul nome
-function getHintText(fileName, timeLeft, totalTime) {
-  if (!fileName || totalTime <= 0) return '';
-  const firstName = (fileName.substring(0, fileName.lastIndexOf('.')) || fileName).trim().split(/\s+/)[0];
-  const cleanName = firstName.trim();
-  const len = cleanName.length;
-  const ratio = timeLeft / totalTime;
+  const sendEmojiWithCooldown = (emoji) => {
+    if (isEmojiOnCooldown) return;
+    sendEmoji(emoji);
+    setIsEmojiOnCooldown(true);
+    setTimeout(() => setIsEmojiOnCooldown(false), 600);
+  };
 
-  if (ratio > 0.6) return null; // Nessun indizio nella prima fase del timer
-
-  if (ratio > 0.3) {
-    // Rivelazione lunghezza
-    const blanks = cleanName.split('').map(() => '_').join(' ');
-    return `💡 Indizio: ${len} lettere (${blanks})`;
-  }
-
-  // Rivelazione prima lettera + lettere ad indici fissi
-  const revealed = cleanName.split('').map((char, i) => {
-    if (i === 0 || i % 3 === 0) return char.toUpperCase();
-    return '_';
-  }).join(' ');
-
-  return `💡 Indizio: ${len} lettere (${revealed})`;
-}
-
-const sendEmojiWithCooldown = (emoji) => {
-  if (isEmojiOnCooldown) return;
-  sendEmoji(emoji);
-  setIsEmojiOnCooldown(true);
-  setTimeout(() => setIsEmojiOnCooldown(false), 600);
-};
   const playSound = (type) => {
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if (!sharedAudioCtx) {
+        sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      const ctx = sharedAudioCtx;
+      
+      // Ripristina il contesto se è sospeso (politiche browser)
+      if (ctx.state === 'suspended') ctx.resume();
+
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
@@ -119,18 +129,19 @@ const sendEmojiWithCooldown = (emoji) => {
       return;
     }
 
-const handleNextQuestion = ({ currentQuestion, currentIndex, total, timeLeft, players, audioLang }) => {
-  if (audioLang) setAudioLang(audioLang);
-  setCurrentQuestion(currentQuestion);
-  if (currentIndex !== undefined) setCurrentIndex(currentIndex);
-  if (total) setTotalRounds(total);
-  setTimeLeft(timeLeft);
-  setPlayers(players);
-  setWinnerMessage(null);
-  setUserInput('');
-  setKahootInput('');
-  setRoundLocked(false);
-};
+    const handleNextQuestion = ({ currentQuestion, currentIndex, total, timeLeft, timerDuration, players, audioLang }) => {
+      if (audioLang) setAudioLang(audioLang);
+      setCurrentQuestion(currentQuestion);
+      if (currentIndex !== undefined) setCurrentIndex(currentIndex);
+      if (total) setTotalRounds(total);
+      if (timerDuration) setTimerDuration(timerDuration);
+      setTimeLeft(timeLeft);
+      setPlayers(players);
+      setWinnerMessage(null);
+      setUserInput('');
+      setKahootInput('');
+      setRoundLocked(false);
+    };
 
     const handleTimerTick = ({ timeLeft }) => setTimeLeft(timeLeft);
 
@@ -166,17 +177,15 @@ const handleNextQuestion = ({ currentQuestion, currentIndex, total, timeLeft, pl
       }, 1000);
     };
 
-const handlePlayerReaction = (reaction) => {
-  const id = Date.now() + Math.random();
-  setReactions(prev => [...prev, { ...reaction, id }]);
-  
-  // Riproduci l'audio corretto associato all'emoji ricevuta
-  playEmojiSound(reaction.emoji);
+    const handlePlayerReaction = (reaction) => {
+      const id = Date.now() + Math.random();
+      setReactions(prev => [...prev, { ...reaction, id }]);
+      playEmojiSound(reaction.emoji);
 
-  setTimeout(() => {
-    setReactions(prev => prev.filter(r => r.id !== id));
-  }, 2500);
-};
+      setTimeout(() => {
+        setReactions(prev => prev.filter(r => r.id !== id));
+      }, 2500);
+    };
 
     const handleScoreUpdated = (updatedPlayers) => setPlayers(updatedPlayers);
 
@@ -213,6 +222,7 @@ const handlePlayerReaction = (reaction) => {
     e.preventDefault();
     if (!userInput.trim() || roundLocked || cooldown > 0) return;
     socket.emit('submit_fastest_finger_guess', { roomCode, guess: userInput });
+    setUserInput(''); 
   };
 
   const handleKahootOptionSelect = (optionText) => {
@@ -226,6 +236,7 @@ const handlePlayerReaction = (reaction) => {
     if (roundLocked || !kahootInput.trim()) return;
     setRoundLocked(true);
     socket.emit('submit_kahoot_answer', { roomCode, answer: kahootInput.trim() });
+    setKahootInput(''); 
   };
 
   const sendEmoji = (emoji) => {
@@ -249,7 +260,12 @@ const handlePlayerReaction = (reaction) => {
         <div className="flex justify-center items-end gap-3 mb-8 h-64">
           {top3[1] && (
             <div className="flex flex-col items-center w-1/3">
-              <img src={`${SERVER_URL}/static/characters/${encodeURIComponent(top3[1].avatar)}`} className="w-12 h-12 rounded-full border-2 border-slate-300 object-cover mb-1" />
+              <img 
+                src={`${SERVER_URL}/static/characters/${encodeURIComponent(top3[1].avatar)}`} 
+                onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/150/4f46e5/ffffff?text=?'; }}
+                className="w-12 h-12 rounded-full border-2 border-slate-300 object-cover mb-1" 
+                alt="" 
+              />
               <span className="text-xs font-bold truncate max-w-full">{top3[1].name}</span>
               <span className="text-[10px] text-slate-400 mb-1">{top3[1].score} pt</span>
               <div className="w-full bg-slate-700 h-32 rounded-t-2xl flex items-center justify-center font-black text-xl border-t-4 border-slate-300">2</div>
@@ -259,7 +275,12 @@ const handlePlayerReaction = (reaction) => {
           {top3[0] && (
             <div className="flex flex-col items-center w-1/3">
               <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
-              <img src={`${SERVER_URL}/static/characters/${encodeURIComponent(top3[0].avatar)}`} className="w-16 h-16 rounded-full border-4 border-amber-400 object-cover mb-1 shadow-lg shadow-amber-500/50" />
+              <img 
+                src={`${SERVER_URL}/static/characters/${encodeURIComponent(top3[0].avatar)}`} 
+                onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/150/4f46e5/ffffff?text=?'; }}
+                className="w-16 h-16 rounded-full border-4 border-amber-400 object-cover mb-1 shadow-lg shadow-amber-500/50" 
+                alt="" 
+              />
               <span className="text-sm font-black truncate max-w-full text-amber-300">{top3[0].name}</span>
               <span className="text-xs text-amber-400 font-bold mb-1">{top3[0].score} pt</span>
               <div className="w-full bg-amber-600 h-44 rounded-t-2xl flex items-center justify-center font-black text-2xl border-t-4 border-amber-300 shadow-xl">1</div>
@@ -268,7 +289,12 @@ const handlePlayerReaction = (reaction) => {
 
           {top3[2] && (
             <div className="flex flex-col items-center w-1/3">
-              <img src={`${SERVER_URL}/static/characters/${encodeURIComponent(top3[2].avatar)}`} className="w-12 h-12 rounded-full border-2 border-amber-700 object-cover mb-1" />
+              <img 
+                src={`${SERVER_URL}/static/characters/${encodeURIComponent(top3[2].avatar)}`} 
+                onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/150/4f46e5/ffffff?text=?'; }}
+                className="w-12 h-12 rounded-full border-2 border-amber-700 object-cover mb-1" 
+                alt="" 
+              />
               <span className="text-xs font-bold truncate max-w-full">{top3[2].name}</span>
               <span className="text-[10px] text-slate-400 mb-1">{top3[2].score} pt</span>
               <div className="w-full bg-amber-900/80 h-24 rounded-t-2xl flex items-center justify-center font-black text-xl border-t-4 border-amber-700">3</div>
@@ -283,7 +309,7 @@ const handlePlayerReaction = (reaction) => {
     );
   }
 
-  const blurPx = mode === 'BLUR_DUEL' ? Math.max(0, (timeLeft / 15) * 20) : 0;
+  const blurPx = mode === 'BLUR_DUEL' ? Math.max(0, (timeLeft / (timerDuration || 15)) * 20) : 0;
   const currentCharFile = getCharacterFilename(currentQuestion);
   const progressPercent = Math.min(100, Math.max(0, ((currentIndex + 1) / totalRounds) * 100));
 
@@ -304,7 +330,14 @@ const handlePlayerReaction = (reaction) => {
       <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-none">
         {players.map((p, i) => (
           <div key={i} className="bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-xs flex items-center gap-2.5 shrink-0">
-            {p.avatar && <img src={`${SERVER_URL}/static/characters/${encodeURIComponent(p.avatar)}`} className="w-6 h-6 rounded-full object-cover" />}
+            {p.avatar && (
+              <img 
+                src={`${SERVER_URL}/static/characters/${encodeURIComponent(p.avatar)}`} 
+                onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/150/4f46e5/ffffff?text=?'; }}
+                className="w-6 h-6 rounded-full object-cover" 
+                alt="" 
+              />
+            )}
             <div>
               <span className="font-bold block text-slate-200">{p.name}</span>
               <span className="text-indigo-400 font-extrabold">{p.score} pt</span>
@@ -347,52 +380,55 @@ const handlePlayerReaction = (reaction) => {
         )}
 
         {(mode === 'FASTEST_FINGER' || mode === 'BLUR_DUEL' || mode === 'AUDIO_DUEL') && (
-<div>
-    <h2 className="text-lg font-bold mb-3">
-      {mode === 'AUDIO_DUEL' ? 'Ascolta e indovina per primo!' : 'Indovina per primo!'}
-    </h2>
+          <div>
+            <h2 className="text-lg font-bold mb-3">
+              {mode === 'AUDIO_DUEL' ? 'Ascolta e indovina per primo!' : 'Indovina per primo!'}
+            </h2>
 
-    {mode === 'AUDIO_DUEL' ? (
-      <div className="w-full h-48 bg-slate-950 rounded-2xl mb-4 flex flex-col items-center justify-center p-6 border border-purple-500/40 shadow-lg shadow-purple-500/10">
-        <div className="w-16 h-16 bg-purple-600/20 text-purple-400 rounded-full flex items-center justify-center mb-3 animate-pulse">
-          🔊
-        </div>
+            {mode === 'AUDIO_DUEL' ? (
+              <div className="w-full h-48 bg-slate-950 rounded-2xl mb-4 flex flex-col items-center justify-center p-6 border border-purple-500/40 shadow-lg shadow-purple-500/10">
+                <div className="w-16 h-16 bg-purple-600/20 text-purple-400 rounded-full flex items-center justify-center mb-3 animate-pulse">
+                  🔊
+                </div>
 {currentCharFile && (
   <audio
     key={`${audioLang}-${currentCharFile}`}
     src={`${SERVER_URL}/static/audio/${audioLang}/${encodeURIComponent(currentCharFile)}`}
     autoPlay
     controls
+    onCanPlay={(e) => {
+      e.target.play().catch(err => console.log("Riproduzione automatica bloccata dal browser:", err));
+    }}
     className="w-full max-w-md mt-2"
   />
 )}
-      </div>
-    ) : (
-      /* Immagine per FASTEST_FINGER / BLUR_DUEL */
-            <div className="w-full h-72 bg-slate-950 rounded-2xl mb-4 flex items-center justify-center p-2 border border-slate-800 overflow-hidden">
-              {currentCharFile ? (
-                <img
-                  key={currentCharFile}
-                  src={`${SERVER_URL}/static/characters/${encodeURIComponent(currentCharFile)}`}
-                  alt="Personaggio"
-                  style={{ filter: `blur(${blurPx}px)` }}
-                  className="max-h-full max-w-full object-contain rounded-lg transition-all duration-300"
-                />
-              ) : (
-                <span className="text-slate-500 text-sm font-medium">Caricamento immagine...</span>
-              )}
-            </div> 
-          )}
-{/* Suggerimento Dinamico Multiplayer */}
-{(() => {
-  const maxTime = gameData.timerDuration || 15;
-  const hint = getHintText(currentCharFile, timeLeft, maxTime);
-  return hint && !roundLocked ? (
-    <div className="my-3 py-2 px-4 bg-purple-950/60 border border-purple-800/80 rounded-xl text-purple-300 text-xs font-mono font-bold tracking-wider animate-pulse text-center">
-      {hint}
-    </div>
-  ) : null;
-})()}
+              </div>
+            ) : (
+              <div className="w-full h-72 bg-slate-950 rounded-2xl mb-4 flex items-center justify-center p-2 border border-slate-800 overflow-hidden">
+                {currentCharFile ? (
+                  <img
+                    key={currentCharFile}
+                    src={`${SERVER_URL}/static/characters/${encodeURIComponent(currentCharFile)}`}
+                    alt="Personaggio"
+                    style={{ filter: `blur(${blurPx}px)` }}
+                    className="max-h-full max-w-full object-contain rounded-lg transition-all duration-300"
+                  />
+                ) : (
+                  <span className="text-slate-500 text-sm font-medium">Caricamento immagine...</span>
+                )}
+              </div> 
+            )}
+
+            {(() => {
+              const maxTime = timerDuration || 15;
+              const hint = getHintText(currentCharFile, timeLeft, maxTime);
+              return hint && !roundLocked ? (
+                <div className="my-3 py-2 px-4 bg-purple-950/60 border border-purple-800/80 rounded-xl text-purple-300 text-xs font-mono font-bold tracking-wider animate-pulse text-center">
+                  {hint}
+                </div>
+              ) : null;
+            })()}
+
             <form onSubmit={handleFastestFingerSubmit} className="flex gap-2">
               <input
                 type="text"
@@ -413,8 +449,7 @@ const handlePlayerReaction = (reaction) => {
           </div>
         )}
 
-        {/* MODALITÀ KAHOOT CON SUPPORTO A TUTTI I TIPI DI DOMANDA */}
-      {mode === 'KAHOOT' && currentQuestion && (
+        {mode === 'KAHOOT' && currentQuestion && (
           <div>
             <div className="flex justify-center items-center gap-2 mb-3 flex-wrap">
               {currentQuestion.section?.title && (
@@ -429,7 +464,6 @@ const handlePlayerReaction = (reaction) => {
 
             <h2 className="text-xl font-extrabold mb-6 text-slate-100">{currentQuestion.questionText}</h2>
 
-            {/* CASO 1: Risposta Aperta (Input di Testo) */}
             {isKahootInput ? (
               <form onSubmit={handleKahootInputSubmit} className="space-y-3 mb-4">
                 <input
@@ -449,7 +483,6 @@ const handlePlayerReaction = (reaction) => {
                 </button>
               </form>
             ) : currentQuestion.type === 'BOOLEAN' ? (
-              /* CASO 2: Vero o Falso */
               <div className="grid grid-cols-2 gap-3 mb-4">
                 {['Vero', 'Falso'].map((opt) => (
                   <button
@@ -463,7 +496,6 @@ const handlePlayerReaction = (reaction) => {
                 ))}
               </div>
             ) : (
-              /* CASO 3: Scelta Multipla / Who Said */
               <div className="grid grid-cols-2 gap-3 mb-4">
                 {currentQuestion.options?.map((opt, i) => (
                   <button
@@ -480,17 +512,17 @@ const handlePlayerReaction = (reaction) => {
           </div>
         )}
 
-<div className="mt-6 pt-4 border-t border-slate-800 flex justify-center gap-3">
-  {['🔥', '💀', '😱', '🎉', '👏', '💩'].map((emoji, idx) => (
-    <button
-      key={idx}
-      onClick={() => sendEmojiWithCooldown(emoji)}
-      className="bg-slate-800 hover:bg-slate-700 p-2.5 rounded-xl text-xl transition transform hover:scale-125 cursor-pointer"
-    >
-      {emoji}
-    </button>
-  ))}
-</div>
+        <div className="mt-6 pt-4 border-t border-slate-800 flex justify-center gap-3">
+          {['🔥', '💀', '😱', '🎉', '👏', '💩'].map((emoji, idx) => (
+            <button
+              key={idx}
+              onClick={() => sendEmojiWithCooldown(emoji)}
+              className="bg-slate-800 hover:bg-slate-700 p-2.5 rounded-xl text-xl transition transform hover:scale-125 cursor-pointer"
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

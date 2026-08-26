@@ -15,7 +15,7 @@ import StoryDetail from './pages/StoryDetail';
 import GuessCharacter from './pages/GuessCharacter';
 import MultiplayerLobby from './pages/MultiplayerLobby';
 import MultiplayerPlay from './pages/MultiplayerPlay';
-
+import BackgroundMusic from './components/BackgroundMusic';
 export default function App() {
   const [isAdmin, setIsAdmin] = useState(() => {
     return localStorage.getItem('isAdmin') === 'true';
@@ -69,7 +69,7 @@ export default function App() {
   return (
     <Router>
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-        
+        <BackgroundMusic />
         <Navbar 
           isAdmin={isAdmin}
           onToggleAdmin={handleAdminToggle}

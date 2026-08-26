@@ -100,7 +100,8 @@ export default function App() {
             <Route path="/story/:id" element={<StoryDetail />} />
             <Route path="/guess-character" element={<GuessCharacter />} />
             <Route path="/multiplayer" element={<MultiplayerLobby />} />
-+ <Route path="/multiplayer-play" element={<MultiplayerPlay />} />          </Routes>
++ <Route path="/multiplayer-play" element={<MultiplayerPlay />} />         
+ </Routes>
         </main>
 
         {/* Modal Password Admin */}

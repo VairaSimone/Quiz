@@ -28,6 +28,15 @@ app.use('/api/sections', sectionRoutes);
 app.use('/api/quiz', quizRoutes);
 app.use('/api/stories', storyRoutes);
 
+// Endpoint per il ping (Health Check)
+app.get('/api/ping', (req, res) => {
+  res.status(200).json({ 
+    success: true, 
+    message: 'pong',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Middleware di gestione degli errori per catturare anomalie durante l'upload dei file
 app.use((err, req, res, next) => {
   if (err) {

@@ -465,99 +465,6 @@ frontend/
 <files>
 This section contains the contents of the repository's files.
 
-<file path="frontend/src/pages/QuizAnime.jsx">
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { BookOpen, Trash2, Award, Layers, ArrowRight } from 'lucide-react';
-
-export default function QuizAnime({ sections, onDeleteSection, isAdmin }) {
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 pb-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
-        
-        {/* Intestazione Sezione */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
-              <Layers className="w-6 h-6 text-indigo-400" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white tracking-wide">Quiz Anime</h1>
-              <p className="text-xs text-slate-400">Scegli una categoria e inizia il test</p>
-            </div>
-          </div>
-          
-          <span className="text-xs font-medium text-slate-400 bg-slate-900 border border-slate-800 px-3.5 py-2 rounded-xl">
-            Sezioni totali: <strong className="text-indigo-400 font-bold">{sections?.length || 0}</strong>
-          </span>
-        </div>
-
-        {/* Griglia Sezioni Quiz */}
-        {!sections || sections.length === 0 ? (
-          <div className="text-center py-16 bg-slate-900/40 border border-dashed border-slate-800 rounded-3xl backdrop-blur-sm">
-            <BookOpen className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-            <h3 className="text-base font-semibold text-slate-300">Nessuna sezione quiz trovata</h3>
-            <p className="text-xs text-slate-500 max-w-xs mx-auto mt-1">
-              Accedi come Admin per aggiungere la prima sezione con file Word (.docx).
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sections.map((section) => (
-              <div
-                key={section.id}
-                className="group relative bg-slate-900/60 backdrop-blur-md border border-slate-800/80 hover:border-indigo-500/40 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 flex flex-col justify-between overflow-hidden"
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-3 mb-4">
-                    <span className="px-3 py-1 rounded-lg text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                      {section.category || 'Anime General'}
-                    </span>
-
-                    {isAdmin && (
-                      <button
-                        onClick={() => onDeleteSection(section.id)}
-                        className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
-                        title="Elimina Sezione"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-
-                  <h3 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors mb-2 line-clamp-1">
-                    {section.title}
-                  </h3>
-                  <p className="text-slate-400 text-xs leading-relaxed line-clamp-2 mb-6">
-                    {section.description || 'Nessuna descrizione disponibile per questa sezione.'}
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-slate-800/60 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-                    <Award className="w-4 h-4 text-amber-400" />
-                    <span>{section.questions_count || 0} Domande</span>
-                  </div>
-
-                  <Link
-                    to={`/section/${section.id}`}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-600/20 group-hover:shadow-indigo-500/30 transition-all cursor-pointer"
-                  >
-                    <span>Esplora</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-      </div>
-    </div>
-  );
-}
-</file>
-
 <file path="backend/prisma/migrations/20260825070347_init_neon/migration.sql">
 -- CreateTable
 CREATE TABLE "Section" (
@@ -899,150 +806,92 @@ export default function Toast({ message, type = 'error', onClose }) {
 }
 </file>
 
-<file path="frontend/src/pages/Home.jsx">
+<file path="frontend/src/pages/QuizAnime.jsx">
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Gamepad2, BookOpen, UserCheck, Users, Sparkles, ArrowRight, MessageSquare, Volume2 } from 'lucide-react';
+import { BookOpen, Trash2, Award, Layers, ArrowRight } from 'lucide-react';
 
-export default function Home() {
-  const features = [
-    {
-      title: 'Quiz & Citazioni',
-      description: 'Metti alla prova quanto conosci le storie e le citazioni iconiche dei nostri personaggi.',
-      icon: Gamepad2,
-      path: '/quizzes',
-      badge: 'Lore Quiz',
-      color: 'from-indigo-500/20 via-purple-500/10 to-transparent',
-      borderColor: 'group-hover:border-indigo-500/50',
-      iconColor: 'text-indigo-400',
-      btnBg: 'bg-indigo-600 hover:bg-indigo-500'
-    },
-    {
-      title: 'Visual Novel Telegram',
-      description: 'Leggi i racconti interattivi scritti nel nostro gruppo Telegram con scenari e immagini.',
-      icon: BookOpen,
-      path: '/stories',
-      badge: 'Storie & VN',
-      color: 'from-purple-500/20 via-pink-500/10 to-transparent',
-      borderColor: 'group-hover:border-purple-500/50',
-      iconColor: 'text-purple-400',
-      btnBg: 'bg-purple-600 hover:bg-purple-500'
-    },
-    {
-      title: 'Indovina il Personaggio',
-      description: 'Riconosci l’OC (Original Character) dalla foto sgranata o da un dettaglio della sua lore.',
-      icon: UserCheck,
-      path: '/guess-character',
-      badge: 'OC Minigame',
-      color: 'from-amber-500/20 via-orange-500/10 to-transparent',
-      borderColor: 'group-hover:border-amber-500/50',
-      iconColor: 'text-amber-400',
-      btnBg: 'bg-amber-600 hover:bg-amber-500'
-    },
-    {
-      title: 'Multiplayer Live PvP',
-      description: 'Crea una stanza e sfida in tempo reale a chi risponde più velocemente!',
-      icon: Users,
-      path: '/multiplayer',
-      badge: 'Sfida Live',
-      color: 'from-emerald-500/20 via-teal-500/10 to-transparent',
-      borderColor: 'group-hover:border-emerald-500/50',
-      iconColor: 'text-emerald-400',
-      btnBg: 'bg-emerald-600 hover:bg-emerald-500'
-    }
-  ];
-
+export default function QuizAnime({ sections, onDeleteSection, isAdmin }) {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 pb-16 relative overflow-hidden">
-      {/* Background Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-indigo-600/10 blur-[120px] pointer-events-none rounded-full" />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 relative z-10">
+    <div className="min-h-screen bg-slate-950 text-slate-100 pb-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
         
-        {/* Banner Principale Personalizzato */}
-        <div className="relative overflow-hidden rounded-3xl bg-slate-900/80 border border-slate-800 p-8 sm:p-12 mb-10 shadow-2xl backdrop-blur-xl">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="max-w-2xl text-left">
-              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-4">
-                <MessageSquare className="w-3.5 h-3.5" /> Wonderful Hub
-              </span>
-              <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight mb-4">
-                Le nostre storie, <br />
-                <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  i nostri Personaggi.
-                </span>
-              </h1>
-              <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-6">
-                L'archivio interattivo per i nostri racconti Telegram. Gioca ai quiz sulle citazioni dei personaggi, indovina chi l'ha detto o rileggi i nostri capitoli preferiti.
-              </p>
+        {/* Intestazione Sezione */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+              <Layers className="w-6 h-6 text-indigo-400" />
             </div>
-
-            {/* Badge Info veloce */}
-            <div className="w-full md:w-auto flex flex-col sm:flex-row md:flex-col gap-3 shrink-0">
-              <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-2xl flex items-center gap-4">
-                <div className="p-3 bg-pink-500/10 border border-pink-500/20 rounded-xl text-pink-400">
-                  <Volume2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-xs text-slate-400">Audio Vocali</div>
-                  <div className="text-sm font-bold text-white">Integrati nei Quiz</div>
-                </div>
-              </div>
-              <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-2xl flex items-center gap-4">
-                <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl text-purple-400">
-                  <Sparkles className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-xs text-slate-400">Personaggi Salvati</div>
-                  <div className="text-sm font-bold text-white">100+ OC</div>
-                </div>
-              </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white tracking-wide">Quiz Anime</h1>
+              <p className="text-xs text-slate-400">Scegli una categoria e inizia il test</p>
             </div>
           </div>
+          
+          <span className="text-xs font-medium text-slate-400 bg-slate-900 border border-slate-800 px-3.5 py-2 rounded-xl">
+            Sezioni totali: <strong className="text-indigo-400 font-bold">{sections?.length || 0}</strong>
+          </span>
         </div>
 
-        {/* Griglia delle Modalità */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {features.map((item) => {
-            const Icon = item.icon;
-            return (
+        {/* Griglia Sezioni Quiz */}
+        {!sections || sections.length === 0 ? (
+          <div className="text-center py-16 bg-slate-900/40 border border-dashed border-slate-800 rounded-3xl backdrop-blur-sm">
+            <BookOpen className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+            <h3 className="text-base font-semibold text-slate-300">Nessuna sezione quiz trovata</h3>
+            <p className="text-xs text-slate-500 max-w-xs mx-auto mt-1">
+              Accedi come Admin per aggiungere la prima sezione con file Word (.docx).
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sections.map((section) => (
               <div
-                key={item.title}
-                className={`group relative rounded-2xl bg-slate-900/50 border border-slate-800/80 p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${item.borderColor} flex flex-col justify-between overflow-hidden`}
+                key={section.id}
+                className="group relative bg-slate-900/60 backdrop-blur-md border border-slate-800/80 hover:border-indigo-500/40 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 flex flex-col justify-between overflow-hidden"
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none`} />
-
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`p-3 rounded-xl bg-slate-800/80 border border-slate-700/50 ${item.iconColor}`}>
-                      <Icon className="w-6 h-6" />
-                    </div>
-                    <span className="px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700">
-                      {item.badge}
+                  <div className="flex items-start justify-between gap-3 mb-4">
+                    <span className="px-3 py-1 rounded-lg text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                      {section.category || 'Anime General'}
                     </span>
+
+                    {isAdmin && (
+                      <button
+                        onClick={() => onDeleteSection(section.id)}
+                        className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
+                        title="Elimina Sezione"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
 
-                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-indigo-300 transition-colors">
-                    {item.title}
+                  <h3 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors mb-2 line-clamp-1">
+                    {section.title}
                   </h3>
-                  <p className="text-slate-400 text-xs sm:text-sm leading-relaxed mb-6">
-                    {item.description}
+                  <p className="text-slate-400 text-xs leading-relaxed line-clamp-2 mb-6">
+                    {section.description || 'Nessuna descrizione disponibile per questa sezione.'}
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-slate-800/60 flex items-center justify-end">
+                <div className="pt-4 border-t border-slate-800/60 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
+                    <Award className="w-4 h-4 text-amber-400" />
+                    <span>{section.questions_count || 0} Domande</span>
+                  </div>
+
                   <Link
-                    to={item.path}
-                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-white rounded-xl text-xs font-semibold shadow-md transition-all cursor-pointer ${item.btnBg}`}
+                    to={`/section/${section.id}`}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-600/20 group-hover:shadow-indigo-500/30 transition-all cursor-pointer"
                   >
-                    <span>Gioca ORA</span>
+                    <span>Esplora</span>
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                   </Link>
                 </div>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
 
       </div>
     </div>
@@ -1675,324 +1524,6 @@ router.delete('/:id', adminAuth, sectionController.deleteSection);
 
 
 module.exports = router;
-</file>
-
-<file path="backend/src/sockets/gameSockets.js">
-const prisma = require('../config/db');
-const fs = require('fs');
-const path = require('path');
-
-const rooms = new Map();
-const MAX_ROUNDS = 10; // Limite fisso di 10 round casuali per partita
-
-function generateRoomCode() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-function getFirstName(filename) {
-  if (!filename) return '';
-  const nameWithoutExt = filename.substring(0, filename.lastIndexOf('.')) || filename;
-  return nameWithoutExt.trim().split(/\s+/)[0];
-}
-
-function clearRoomTimers(room) {
-  if (!room) return;
-  if (room.timer) {
-    clearInterval(room.timer);
-    room.timer = null;
-  }
-  if (room.roundTimeout) {
-    clearTimeout(room.roundTimeout);
-    room.roundTimeout = null;
-  }
-}
-
-module.exports = function setupGameSockets(io) {
-
-  function startRoundTimer(roomCode) {
-  const room = rooms.get(roomCode);
-  if (!room) return;
-
-  clearRoomTimers(room);
-
-  if (room.currentIndex >= room.questions.length) {
-    room.status = 'ENDED';
-    const sortedPlayers = [...room.players].sort((a, b) => b.score - a.score);
-    io.to(roomCode).emit('game_over', sortedPlayers);
-    return;
-  }
-
-  room.timeLeft = room.timerDuration || 15; // Usa il timer personalizzato della stanza
-  room.status = 'PLAYING';
-  room.lockedRound = false;
-
-  room.players.forEach(p => {
-    p.hasAnswered = false;
-    p.cooldownUntil = 0;
-  });
-
-  const currentQ = room.questions[room.currentIndex];
-
-io.to(roomCode).emit('next_question_ready', {
-  currentQuestion: currentQ,
-  audioLang: room.audioLang, // <-- Invia la lingua selezionata per la stanza
-  currentIndex: room.currentIndex,
-  total: room.questions.length,
-  timeLeft: room.timeLeft,
-  timerDuration: room.timerDuration,
-  players: room.players
-});
-
-    room.timer = setInterval(() => {
-      const liveRoom = rooms.get(roomCode);
-      if (!liveRoom || liveRoom.status !== 'PLAYING') {
-        clearRoomTimers(liveRoom);
-        return;
-      }
-
-      liveRoom.timeLeft -= 1;
-
-      if (liveRoom.timeLeft <= 0) {
-        clearRoomTimers(liveRoom);
-        endRound(roomCode);
-      } else {
-        io.to(roomCode).emit('timer_tick', { timeLeft: liveRoom.timeLeft });
-      }
-    }, 1000);
-  }
-
-  function endRound(roomCode) {
-    const room = rooms.get(roomCode);
-    if (!room || room.status === 'ROUND_REVEAL' || room.status === 'ENDED') return;
-
-    room.status = 'ROUND_REVEAL';
-    clearRoomTimers(room);
-
-    let correctAnswerText = '';
-    const currentQ = room.questions[room.currentIndex];
-
-    if (room.mode === 'KAHOOT') {
-      correctAnswerText = currentQ ? currentQ.correctAnswer : '';
-      room.players.forEach(p => {
-        if (!p.hasAnswered) p.streak = 0;
-      });
-    } else {
-      correctAnswerText = getFirstName(currentQ);
-    }
-
-    io.to(roomCode).emit('round_ended', {
-      correctAnswer: correctAnswerText,
-      players: room.players,
-      currentIndex: room.currentIndex,
-      total: room.questions.length
-    });
-
-    room.roundTimeout = setTimeout(() => {
-      const liveRoom = rooms.get(roomCode);
-      if (!liveRoom || liveRoom.status === 'ENDED') return;
-
-      liveRoom.currentIndex += 1;
-
-      if (liveRoom.currentIndex >= liveRoom.questions.length) {
-        liveRoom.status = 'ENDED';
-        const sortedPlayers = [...liveRoom.players].sort((a, b) => b.score - a.score);
-        io.to(roomCode).emit('game_over', sortedPlayers);
-      } else {
-        startRoundTimer(roomCode);
-      }
-    }, 4000);
-  }
-
-  io.on('connection', (socket) => {
-
-// backend/src/sockets/gameSockets.js
-
-socket.on('create_room', async ({ mode, sectionId, playerName, avatar, timerDuration = 15, totalRounds = 10, audioLang = 'jp' }) => {
-  const roomCode = generateRoomCode();
-  let questions = [];
-
-  if (mode === 'KAHOOT') {
-    const queryOptions = sectionId
-      ? { where: { sectionId }, include: { options: true, section: { select: { title: true } } } }
-      : { include: { options: true, section: { select: { title: true } } } };
-    questions = await prisma.question.findMany(queryOptions);
-  } else if (mode === 'FASTEST_FINGER' || mode === 'BLUR_DUEL') {
-    const charDir = path.join(__dirname, '../../static/characters');
-    if (fs.existsSync(charDir)) {
-      questions = fs.readdirSync(charDir).filter(f => /\.(png|jpe?g|webp)$/i.test(f));
-    }
-  } else if (mode === 'AUDIO_DUEL') {
-    // Seleziona la sottocartella in base alla lingua scelta ('jp' o 'it')
-    const selectedLang = ['jp', 'it'].includes(audioLang) ? audioLang : 'jp';
-    const audioDir = path.join(__dirname, `../../static/audio/${selectedLang}`);
-    
-    if (fs.existsSync(audioDir)) {
-      questions = fs.readdirSync(audioDir).filter(f => /\.(mp3|wav|ogg|m4a|aac)$/i.test(f));
-    }
-  }
-
-  if (questions.length === 0) {
-    return socket.emit('error_msg', 'Nessuna domanda o file audio disponibile per questa modalità');
-  }
-
-  const maxLimit = totalRounds === 'ENDLESS' ? questions.length : Math.min(Number(totalRounds), questions.length);
-  questions = questions.sort(() => 0.5 - Math.random()).slice(0, maxLimit);
-
-  const selectedTimer = Number(timerDuration) || 15;
-
-  const newRoom = {
-    code: roomCode,
-    mode,
-    audioLang, // Salviamo la lingua scelta nella stanza
-    hostId: socket.id,
-    status: 'LOBBY',
-    currentIndex: 0,
-    questions,
-    players: [{ id: socket.id, name: playerName, avatar, score: 0, streak: 0, hasAnswered: false, cooldownUntil: 0 }],
-    lockedRound: false,
-    timer: null,
-    roundTimeout: null,
-    timerDuration: selectedTimer,
-    timeLeft: selectedTimer
-  };
-
-  rooms.set(roomCode, newRoom);
-  socket.join(roomCode);
-  socket.emit('room_created', { roomCode, room: newRoom });
-});
-
-    socket.on('join_room', ({ roomCode, playerName, avatar }) => {
-      const room = rooms.get(roomCode);
-      if (!room) return socket.emit('error_msg', 'Stanza non trovata');
-      if (room.status !== 'LOBBY') return socket.emit('error_msg', 'Partita già iniziata');
-
-      room.players.push({ id: socket.id, name: playerName, avatar, score: 0, streak: 0, hasAnswered: false, cooldownUntil: 0 });
-      socket.join(roomCode);
-
-      io.to(roomCode).emit('player_list_updated', room.players);
-      socket.emit('joined_successfully', { roomCode, room });
-    });
-
-    socket.on('start_game', ({ roomCode }) => {
-      const room = rooms.get(roomCode);
-      if (!room || room.hostId !== socket.id || room.status !== 'LOBBY') return;
-
-      room.currentIndex = 0;
-      io.to(roomCode).emit('game_started', {
-        roomCode: room.code,
-        mode: room.mode,
-        total: room.questions.length,
-        currentIndex: 0,
-        currentQuestion: room.questions[0],
-        players: room.players,
-        timeLeft: 15
-      });
-
-      startRoundTimer(roomCode);
-    });
-
-    socket.on('submit_kahoot_answer', ({ roomCode, answer }) => {
-      const room = rooms.get(roomCode);
-      if (!room || room.status !== 'PLAYING') return;
-
-      const player = room.players.find(p => p.id === socket.id);
-      if (!player || player.hasAnswered) return;
-
-      player.hasAnswered = true;
-      const q = room.questions[room.currentIndex];
-
-      const normUser = answer.toLowerCase().trim();
-      const normCorrect = q ? q.correctAnswer.toLowerCase().trim() : '';
-
-      // Confronto esatto o contenimento della stringa
-      const isCorrect = normUser === normCorrect || (normCorrect.length > 0 && normCorrect.includes(normUser));
-
-      if (isCorrect) {
-        player.streak += 1;
-        const multiplier = 1 + Math.min(player.streak - 1, 3) * 0.25;
-        const basePoints = 500 + (room.timeLeft * 30);
-        const points = Math.round(basePoints * multiplier);
-        player.score += points;
-
-        socket.emit('answer_feedback', { correct: true, pointsGained: points, streak: player.streak });
-      } else {
-        player.streak = 0;
-        socket.emit('answer_feedback', { correct: false, pointsGained: 0, streak: 0 });
-      }
-
-      io.to(roomCode).emit('score_updated', room.players);
-
-      if (room.players.every(p => p.hasAnswered)) {
-        endRound(roomCode);
-      }
-    });
-
-    socket.on('submit_fastest_finger_guess', ({ roomCode, guess }) => {
-      const room = rooms.get(roomCode);
-      if (!room || room.status !== 'PLAYING' || room.lockedRound) return;
-
-      const player = room.players.find(p => p.id === socket.id);
-      if (!player) return;
-
-      if (Date.now() < player.cooldownUntil) {
-        return socket.emit('cooldown_active');
-      }
-
-      const currentFile = room.questions[room.currentIndex];
-      const firstName = getFirstName(currentFile);
-
-      if (guess.toLowerCase().trim() === firstName.toLowerCase()) {
-        room.lockedRound = true;
-
-        let points = 100;
-        if (room.mode === 'BLUR_DUEL') {
-          points = Math.max(20, Math.round(room.timeLeft * 20));
-        }
-
-        player.score += points;
-
-        io.to(roomCode).emit('round_stolen', {
-          winnerName: player.name,
-          winnerAvatar: player.avatar,
-          correctName: firstName,
-          pointsGained: points,
-          players: room.players
-        });
-
-        endRound(roomCode);
-      } else {
-        player.cooldownUntil = Date.now() + 3000;
-        socket.emit('guess_error', { message: 'Errato! Bloccato per 3s', seconds: 3 });
-      }
-    });
-
-    socket.on('send_reaction', ({ roomCode, emoji }) => {
-      const room = rooms.get(roomCode);
-      if (!room) return;
-      const player = room.players.find(p => p.id === socket.id);
-      if (player) {
-        io.to(roomCode).emit('player_reaction', {
-          playerId: socket.id,
-          playerName: player.name,
-          avatar: player.avatar,
-          emoji
-        });
-      }
-    });
-
-    socket.on('disconnect', () => {
-      rooms.forEach((room, code) => {
-        room.players = room.players.filter(p => p.id !== socket.id);
-        if (room.players.length === 0) {
-          clearRoomTimers(room);
-          rooms.delete(code);
-        } else {
-          io.to(code).emit('player_list_updated', room.players);
-        }
-      });
-    });
-  });
-};
 </file>
 
 <file path="frontend/public/favicon.svg">
@@ -6203,156 +5734,6 @@ API.interceptors.request.use((config) => {
 export default API;
 </file>
 
-<file path="frontend/src/components/CreateSectionModal.jsx">
-import React, { useState } from 'react';
-import { X, UploadCloud, CheckCircle2 } from 'lucide-react';
-
-export default function CreateSectionModal({ isOpen, onClose, onSuccess }) {
-  const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('');
-  const [description, setDescription] = useState('');
-  const [wordFile, setWordFile] = useState(null);
-
-  if (!isOpen) return null;
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    // Esegui la logica di invio o chiamata API qui...
-    
-    // Reset dello stato locale
-    setTitle('');
-    setCategory('');
-    setDescription('');
-    setWordFile(null);
-
-    if (onSuccess) onSuccess();
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden relative">
-        
-        {/* Glow Decorativo top */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
-
-        {/* Modal Header */}
-        <div className="px-6 pt-6 pb-4 flex items-center justify-between border-b border-slate-800/60">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
-            Crea Nuova Sezione Quiz
-          </h3>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          
-          {/* Input Titolo */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Titolo Sezione
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="es. Naruto Shippuden - Arca Akatsuki"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-800/80 border border-slate-700/80 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-sm text-white placeholder-slate-500 transition focus:outline-none"
-            />
-          </div>
-
-          {/* Input Categoria */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Categoria / Genere
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="es. Shonen, Seinen, Isekai..."
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-800/80 border border-slate-700/80 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-sm text-white placeholder-slate-500 transition focus:outline-none"
-            />
-          </div>
-
-          {/* Input Descrizione */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Descrizione
-            </label>
-            <textarea
-              rows={3}
-              placeholder="Breve introduzione al contenuto del quiz..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-800/80 border border-slate-700/80 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-sm text-white placeholder-slate-500 transition focus:outline-none resize-none"
-            />
-          </div>
-
-          {/* Area File Upload Word (.docx) */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Documento Domande (.docx)
-            </label>
-            <label className={`border-2 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center cursor-pointer transition ${
-              wordFile 
-                ? 'border-emerald-500/50 bg-emerald-500/5' 
-                : 'border-slate-700 hover:border-indigo-500/50 bg-slate-800/40 hover:bg-slate-800/80'
-            }`}>
-              <input
-                type="file"
-                accept=".docx"
-                onChange={(e) => setWordFile(e.target.files[0])}
-                className="hidden"
-              />
-              {wordFile ? (
-                <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold">
-                  <CheckCircle2 className="w-5 h-5 shrink-0" />
-                  <span className="truncate max-w-[240px]">{wordFile.name}</span>
-                </div>
-              ) : (
-                <div className="text-center">
-                  <UploadCloud className="w-7 h-7 text-indigo-400 mx-auto mb-1.5" />
-                  <p className="text-xs font-medium text-slate-300">
-                    Clicca per caricare il file Word
-                  </p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">Formato accetto: .docx</p>
-                </div>
-              )}
-            </label>
-          </div>
-
-          {/* Modal Footer */}
-          <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-800/60">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2.5 text-xs font-semibold text-slate-400 hover:text-white transition cursor-pointer"
-            >
-              Annulla
-            </button>
-            <button
-              type="submit"
-              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-indigo-600/20 transition cursor-pointer"
-            >
-              Crea Sezione
-            </button>
-          </div>
-
-        </form>
-      </div>
-    </div>
-  );
-}
-</file>
-
 <file path="frontend/src/components/CreateStoryModal.jsx">
 import React, { useState } from 'react';
 import { X, Upload, FileJson } from 'lucide-react';
@@ -6755,6 +6136,1518 @@ export default function SectionCard({ section, onDelete, isAdmin }) {
             Gioca Ora
           </Link>
         )}
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="frontend/src/pages/Home.jsx">
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Gamepad2, BookOpen, UserCheck, Users, Sparkles, ArrowRight, MessageSquare, Volume2 } from 'lucide-react';
+
+export default function Home() {
+  const features = [
+    {
+      title: 'Quiz & Citazioni',
+      description: 'Metti alla prova quanto conosci le storie e le citazioni iconiche dei nostri personaggi.',
+      icon: Gamepad2,
+      path: '/quizzes',
+      badge: 'Lore Quiz',
+      color: 'from-indigo-500/20 via-purple-500/10 to-transparent',
+      borderColor: 'group-hover:border-indigo-500/50',
+      iconColor: 'text-indigo-400',
+      btnBg: 'bg-indigo-600 hover:bg-indigo-500'
+    },
+    {
+      title: 'Visual Novel Telegram',
+      description: 'Leggi i racconti interattivi scritti nel nostro gruppo Telegram con scenari e immagini.',
+      icon: BookOpen,
+      path: '/stories',
+      badge: 'Storie & VN',
+      color: 'from-purple-500/20 via-pink-500/10 to-transparent',
+      borderColor: 'group-hover:border-purple-500/50',
+      iconColor: 'text-purple-400',
+      btnBg: 'bg-purple-600 hover:bg-purple-500'
+    },
+    {
+      title: 'Indovina il Personaggio',
+      description: 'Riconosci l’OC (Original Character) dalla foto sgranata o da un dettaglio della sua lore.',
+      icon: UserCheck,
+      path: '/guess-character',
+      badge: 'OC Minigame',
+      color: 'from-amber-500/20 via-orange-500/10 to-transparent',
+      borderColor: 'group-hover:border-amber-500/50',
+      iconColor: 'text-amber-400',
+      btnBg: 'bg-amber-600 hover:bg-amber-500'
+    },
+    {
+      title: 'Multiplayer Live PvP',
+      description: 'Crea una stanza e sfida in tempo reale a chi risponde più velocemente!',
+      icon: Users,
+      path: '/multiplayer',
+      badge: 'Sfida Live',
+      color: 'from-emerald-500/20 via-teal-500/10 to-transparent',
+      borderColor: 'group-hover:border-emerald-500/50',
+      iconColor: 'text-emerald-400',
+      btnBg: 'bg-emerald-600 hover:bg-emerald-500'
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 pb-16 relative overflow-hidden">
+      {/* Background Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-indigo-600/10 blur-[120px] pointer-events-none rounded-full" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 relative z-10">
+        
+        {/* Banner Principale Personalizzato */}
+        <div className="relative overflow-hidden rounded-3xl bg-slate-900/80 border border-slate-800 p-8 sm:p-12 mb-10 shadow-2xl backdrop-blur-xl">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="max-w-2xl text-left">
+              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-4">
+                <MessageSquare className="w-3.5 h-3.5" /> Wonderful Hub
+              </span>
+              <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight mb-4">
+                Le nostre storie, <br />
+                <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  i nostri Personaggi.
+                </span>
+              </h1>
+              <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-6">
+                L'archivio interattivo per i nostri racconti Telegram. Gioca ai quiz sulle citazioni dei personaggi, indovina chi l'ha detto o rileggi i nostri capitoli preferiti.
+              </p>
+            </div>
+
+            {/* Badge Info veloce */}
+            <div className="w-full md:w-auto flex flex-col sm:flex-row md:flex-col gap-3 shrink-0">
+              <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-2xl flex items-center gap-4">
+                <div className="p-3 bg-pink-500/10 border border-pink-500/20 rounded-xl text-pink-400">
+                  <Volume2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400">Audio Vocali</div>
+                  <div className="text-sm font-bold text-white">Integrati nei Quiz</div>
+                </div>
+              </div>
+              <div className="bg-slate-950/60 border border-slate-800 p-4 rounded-2xl flex items-center gap-4">
+                <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl text-purple-400">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400">Personaggi Salvati</div>
+                  <div className="text-sm font-bold text-white">100+ OC</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Griglia delle Modalità */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {features.map((item) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={item.title}
+                className={`group relative rounded-2xl bg-slate-900/50 border border-slate-800/80 p-6 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${item.borderColor} flex flex-col justify-between overflow-hidden`}
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none`} />
+
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className={`p-3 rounded-xl bg-slate-800/80 border border-slate-700/50 ${item.iconColor}`}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <span className="px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                      {item.badge}
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-indigo-300 transition-colors">
+                    {item.title}
+                  </h3>
+                  <p className="text-slate-400 text-xs sm:text-sm leading-relaxed mb-6">
+                    {item.description}
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-slate-800/60 flex items-center justify-end">
+                  <Link
+                    to={item.path}
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-white rounded-xl text-xs font-semibold shadow-md transition-all cursor-pointer ${item.btnBg}`}
+                  >
+                    <span>Gioca ORA</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                  </Link>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="frontend/src/pages/QuizPlay.jsx">
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import API from '../api/client';
+import confetti from 'canvas-confetti';
+import { CheckCircle2, XCircle, Trophy, RotateCcw, Home, Sparkles, Play, Layers, Zap, User, Award, Shield } from 'lucide-react';
+import Toast from '../components/Toast';
+
+export default function QuizPlay() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [gameStarted, setGameStarted] = useState(false);
+  const [totalQuestionsCount, setTotalQuestionsCount] = useState(0);
+
+  // Gamification e Nickname
+  const [playerName, setPlayerName] = useState(localStorage.getItem('playerName') || '');
+
+  const [questions, setQuestions] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState('');
+  const [shortAnswerInput, setShortAnswerInput] = useState('');
+  const [isAnswered, setIsAnswered] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
+  const [score, setScore] = useState(0);
+  const [isFinished, setIsFinished] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    const fetchSectionInfo = async () => {
+      try {
+        setLoading(true);
+        const res = await API.get(`/sections/${id}`);
+        setTotalQuestionsCount(res.data.data.questions.length);
+      } catch (err) {
+        setToast({ message: 'Errore nel caricamento della sezione!', type: 'error' });
+        setTimeout(() => navigate('/'), 1500);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSectionInfo();
+  }, [id, navigate]);
+
+  const startQuiz = async (limitParam) => {
+    if (!playerName.trim()) {
+      setToast({ message: 'Inserisci un nickname prima di giocare!', type: 'error' });
+      return;
+    }
+    localStorage.setItem('playerName', playerName.trim());
+
+    try {
+      setLoading(true);
+      const res = await API.get(`/quiz/sections/${id}/play?limit=${limitParam}`);
+      setQuestions(res.data.data);
+      setGameStarted(true);
+    } catch (err) {
+      setToast({ message: 'Errore nell\'avvio del quiz!', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const currentQuestion = questions[currentIndex];
+
+  const handleSelectOption = (answerText) => {
+    if (isAnswered) return;
+    setSelectedAnswer(answerText);
+    validateAnswer(answerText);
+  };
+
+  const handleShortAnswerSubmit = (e) => {
+    e.preventDefault();
+    if (isAnswered || !shortAnswerInput.trim()) return;
+    setSelectedAnswer(shortAnswerInput.trim());
+    validateAnswer(shortAnswerInput.trim());
+  };
+
+  const validateAnswer = (userAns) => {
+    setIsAnswered(true);
+    const normalizedUser = userAns.toLowerCase().trim();
+    const normalizedCorrect = currentQuestion.correctAnswer.toLowerCase().trim();
+    const correct = normalizedUser === normalizedCorrect || normalizedCorrect.includes(normalizedUser);
+
+    setIsCorrect(correct);
+    if (correct) {
+      setScore(prev => prev + 1);
+    }
+  };
+
+  const handleNextQuestion = () => {
+    if (currentIndex + 1 < questions.length) {
+      setCurrentIndex(prev => prev + 1);
+      setSelectedAnswer('');
+      setShortAnswerInput('');
+      setIsAnswered(false);
+      setIsCorrect(false);
+    } else {
+      finishQuiz();
+    }
+  };
+
+  const finishQuiz = async () => {
+    setIsFinished(true);
+    confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
+
+    try {
+      await API.post(`/quiz/sections/${id}/results`, {
+        score: score,
+        totalQuestions: questions.length,
+        playerName: playerName.trim() || 'Anonimo'
+      });
+    } catch (err) {
+      console.error('Errore nel salvataggio del risultato:', err);
+    }
+  };
+
+  // Helper per assegnare i badge basati sulla percentuale di accuratezza
+  const getBadge = (percentage) => {
+    if (percentage === 100) {
+      return { title: 'Leggenda Anime', color: 'bg-amber-500/10 text-amber-400 border-amber-500/30', icon: Trophy };
+    } else if (percentage >= 80) {
+      return { title: 'Maestro Otaku', color: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30', icon: Award };
+    } else if (percentage >= 50) {
+      return { title: 'Otaku Apprendista', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30', icon: Shield };
+    } else {
+      return { title: 'Novizio Anime', color: 'bg-slate-500/10 text-slate-400 border-slate-500/30', icon: User };
+    }
+  };
+
+  if (loading) return <div className="text-center py-20 text-slate-400">Caricamento in corso...</div>;
+
+  // SCHERMATA 1: Selezione Modalità e Inserimento Profilo Utente
+  if (!gameStarted) {
+    return (
+      <div className="max-w-xl mx-auto my-12 px-4">
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center text-white shadow-2xl">
+          <Sparkles className="w-12 h-12 text-indigo-400 mx-auto mb-3" />
+          <h1 className="text-3xl font-extrabold mb-2">Preparati al Quiz</h1>
+          <p className="text-slate-400 text-sm mb-6">
+            Domande disponibili in questa sezione: <span className="text-indigo-400 font-bold">{totalQuestionsCount}</span>
+          </p>
+
+          {/* Profilo Nickname */}
+          <div className="mb-8 text-left bg-slate-800/60 border border-slate-700/80 p-4 rounded-2xl">
+            <label className="block text-xs font-bold text-slate-300 uppercase mb-2 flex items-center gap-1.5">
+              <User className="w-4 h-4 text-indigo-400" /> Il tuo Nickname Giocatore *
+            </label>
+            <input
+              type="text"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+              placeholder="Inserisci il tuo nome..."
+              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+
+          <div className="space-y-4">
+            {totalQuestionsCount >= 15 && (
+              <button
+                onClick={() => startQuiz('15')}
+                className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-indigo-500 p-5 rounded-2xl flex items-center justify-between text-left transition cursor-pointer group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="bg-indigo-600/20 text-indigo-400 p-3 rounded-xl group-hover:scale-110 transition">
+                    <Zap className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-lg">Partita Rapida</div>
+                    <div className="text-xs text-slate-400">15 domande estratte a caso</div>
+                  </div>
+                </div>
+                <Play className="w-5 h-5 text-indigo-400" />
+              </button>
+            )}
+
+            <button
+              onClick={() => startQuiz('all')}
+              className="w-full bg-indigo-600 hover:bg-indigo-500 p-5 rounded-2xl flex items-center justify-between text-left transition cursor-pointer shadow-lg shadow-indigo-600/20 group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="bg-white/20 text-white p-3 rounded-xl group-hover:scale-110 transition">
+                  <Layers className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="font-bold text-lg">Tutte le Domande</div>
+                  <div className="text-xs text-indigo-100">
+                    Tutte le {totalQuestionsCount} domande mescolate
+                  </div>
+                </div>
+              </div>
+              <Play className="w-5 h-5 text-white fill-current" />
+            </button>
+          </div>
+        </div>
+        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      </div>
+    );
+  }
+
+  // SCHERMATA FINALE: Risultati + Badge Gamification
+  if (isFinished) {
+    const percentage = Math.round((score / questions.length) * 100);
+    const badge = getBadge(percentage);
+    const BadgeIcon = badge.icon;
+
+    return (
+      <div className="max-w-md mx-auto my-12 px-4">
+        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center text-white shadow-2xl">
+          <Trophy className="w-16 h-16 text-amber-400 mx-auto mb-3 animate-bounce" />
+          <h1 className="text-3xl font-extrabold mb-1">Quiz Completato!</h1>
+          <p className="text-slate-400 text-sm mb-4">Ottimo lavoro <span className="text-white font-bold">{playerName}</span>!</p>
+
+          {/* Badge sbloccato */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-bold mb-6 ${badge.color}">
+            <BadgeIcon className="w-4 h-4" />
+            <span>BADGE: {badge.title}</span>
+          </div>
+
+          <div className="bg-slate-800/80 rounded-2xl p-6 mb-6">
+            <div className="text-5xl font-black text-indigo-400 mb-2">{score} / {questions.length}</div>
+            <div className="text-sm font-semibold text-slate-300">Accuratezza: {percentage}%</div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <button onClick={() => window.location.reload()} className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 py-3 rounded-xl font-semibold transition text-sm cursor-pointer">
+              <RotateCcw className="w-4 h-4" /> Rigioca
+            </button>
+            <button onClick={() => navigate('/')} className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl font-semibold transition text-sm cursor-pointer">
+              <Home className="w-4 h-4" /> Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const isInputAnswer = currentQuestion.type === 'SHORT_ANSWER' || 
+    (currentQuestion.type !== 'BOOLEAN' && (!currentQuestion.options || currentQuestion.options.length === 0));
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="mb-6 flex items-center justify-between text-slate-400 text-sm">
+        <span className="font-bold text-indigo-400">Domanda {currentIndex + 1} di {questions.length}</span>
+        <span className="bg-slate-800 px-3 py-1 rounded-full text-xs font-semibold">Punti: {score}</span>
+      </div>
+
+      <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mb-8">
+        <div className="bg-indigo-500 h-full transition-all duration-300" style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }} />
+      </div>
+
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 text-white shadow-xl mb-6">
+        <div className="flex gap-2 mb-4">
+          <span className="text-[10px] font-bold bg-indigo-950 text-indigo-400 px-2.5 py-1 rounded-full uppercase">{currentQuestion.type}</span>
+          <span className="text-[10px] font-bold bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full">{currentQuestion.level}</span>
+        </div>
+
+        <h2 className="text-xl md:text-2xl font-bold mb-8 leading-snug">{currentQuestion.questionText}</h2>
+
+        {isInputAnswer ? (
+          <form onSubmit={handleShortAnswerSubmit} className="space-y-4">
+            <input
+              type="text"
+              disabled={isAnswered}
+              value={shortAnswerInput}
+              onChange={(e) => setShortAnswerInput(e.target.value)}
+              placeholder="Scrivi la tua risposta qui..."
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 disabled:opacity-60"
+            />
+            {!isAnswered && (
+              <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition cursor-pointer">Invia Risposta</button>
+            )}
+          </form>
+        ) : currentQuestion.type === 'BOOLEAN' ? (
+          <div className="grid grid-cols-2 gap-4">
+            {['Vero', 'Falso'].map((opt) => (
+              <button
+                key={opt}
+                disabled={isAnswered}
+                onClick={() => handleSelectOption(opt)}
+                className={`p-4 rounded-2xl font-bold border transition text-center cursor-pointer ${
+                  selectedAnswer === opt
+                    ? isCorrect ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-rose-600 border-rose-500 text-white'
+                    : 'bg-slate-800 border-slate-700 hover:border-indigo-500 text-slate-200'
+                }`}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {currentQuestion.options?.map((opt) => {
+              const isSelected = selectedAnswer === opt.text;
+              let btnStyle = 'bg-slate-800/80 border-slate-700/80 text-slate-200 hover:border-indigo-500';
+
+              if (isAnswered) {
+                if (isSelected) {
+                  btnStyle = isCorrect ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-rose-600 border-rose-500 text-white';
+                } else if (opt.text.toLowerCase().trim() === currentQuestion.correctAnswer.toLowerCase().trim()) {
+                  btnStyle = 'bg-emerald-950/80 border-emerald-800 text-emerald-400';
+                }
+              }
+
+              return (
+                <button
+                  key={opt.id}
+                  disabled={isAnswered}
+                  onClick={() => handleSelectOption(opt.text)}
+                  className={`w-full p-4 rounded-xl font-medium text-left border transition flex items-center justify-between cursor-pointer ${btnStyle}`}
+                >
+                  <span>{opt.text}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {isAnswered && (
+          <div className={`mt-6 p-4 rounded-2xl flex items-center gap-3 ${
+            isCorrect ? 'bg-emerald-950/60 border border-emerald-800 text-emerald-300' : 'bg-rose-950/60 border border-rose-800 text-rose-300'
+          }`}>
+            {isCorrect ? <CheckCircle2 className="w-6 h-6 shrink-0" /> : <XCircle className="w-6 h-6 shrink-0" />}
+            <div>
+              <div className="font-bold text-sm">{isCorrect ? 'Risposta Esatta!' : 'Risposta Errata!'}</div>
+              {!isCorrect && (
+                <div className="text-xs mt-0.5">Risposta corretta: <span className="underline font-bold">{currentQuestion.correctAnswer}</span></div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {isAnswered && (
+        <button
+          onClick={handleNextQuestion}
+          className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-2xl transition shadow-lg shadow-indigo-600/20 cursor-pointer flex items-center justify-center gap-2"
+        >
+          <span>{currentIndex + 1 < questions.length ? 'Prossima Domanda' : 'Vedi Risultati'}</span>
+          <Sparkles className="w-5 h-5" />
+        </button>
+      )}
+    </div>
+  );
+}
+</file>
+
+<file path="frontend/src/pages/SectionDetail.jsx">
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import API, { SERVER_URL } from '../api/client';
+import EditQuestionModal from '../components/EditQuestionModal';
+import { Upload, FileText, Play, Trash2, ArrowLeft, Trophy, CheckCircle, Edit3 } from 'lucide-react';
+
+export default function SectionDetail() {
+  const { id } = useParams();
+  const [section, setSection] = useState(null);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [file, setFile] = useState(null);
+  const [uploadStatus, setUploadStatus] = useState(null);
+  const [editingQuestion, setEditingQuestion] = useState(null);
+const getImageUrl = (path) => {
+  if (!path) return 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=60';
+  return path.startsWith('http') ? path : `${SERVER_URL}${path}`;
+};
+const fetchSectionData = async () => {
+    try {
+      setLoading(true);
+      const [resSection, resLeaderboard] = await Promise.all([
+        API.get(`/sections/${id}`),
+        API.get(`/quiz/sections/${id}/leaderboard`)
+      ]);
+
+      const rawData = resSection.data.data;
+      const sectionData = Array.isArray(rawData) ? rawData[0] : rawData;
+
+      if (sectionData) {
+        setSection({
+          ...sectionData,
+          questions: sectionData.questions || []
+        });
+      }
+
+      setLeaderboard(resLeaderboard.data.data || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+useEffect(() => {
+    fetchSectionData();
+  }, [id]);
+  const handleFileChange = (e) => {
+    const selected = e.target.files[0];
+    if (selected && selected.name.endsWith('.docx')) {
+      setFile(selected);
+      setUploadStatus(null);
+    } else {
+      alert('Seleziona un file valido con estensione .docx');
+    }
+  };
+
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('docxFile', file);
+
+    try {
+      setUploading(true);
+      const res = await API.post(`/quiz/sections/${id}/upload-docx`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setUploadStatus(`Successo! Importate ${res.data.count} domande.`);
+      setFile(null);
+      fetchSectionData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Errore nell\'upload del file');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteSingleQuestion = async (qId) => {
+    if (!window.confirm('Eliminare questa specifica domanda?')) return;
+    try {
+      await API.delete(`/quiz/questions/${qId}`);
+      fetchSectionData();
+    } catch (err) {
+      alert('Errore durante l\'eliminazione della domanda');
+    }
+  };
+
+  const handleClearQuestions = async () => {
+    if (!window.confirm('Vuoi rimuovere TUTTE le domande salvate per questa sezione?')) return;
+    try {
+      await API.delete(`/quiz/sections/${id}/questions`);
+      fetchSectionData();
+    } catch (err) {
+      alert('Errore nello svuotamento delle domande');
+    }
+  };
+
+  if (loading) return <div className="text-center py-20 text-slate-400">Caricamento in corso...</div>;
+  if (!section) return <div className="text-center py-20 text-red-400">Sezione non trovata!</div>;
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-8">
+<Link to="/admin" className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 text-sm">
+  <ArrowLeft className="w-4 h-4" /> Torna al Pannello Admin
+</Link>
+
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-8 flex flex-col md:flex-row gap-6 items-center justify-between">
+        <div className="flex items-center gap-5">
+<img 
+  src={getImageUrl(section.coverImage)} 
+  alt={section.title}
+  className="w-24 h-24 rounded-xl object-cover border border-slate-700" 
+/>
+          <div>
+            <h1 className="text-3xl font-extrabold text-white mb-1">{section.title}</h1>
+            <p className="text-slate-400 text-sm">{section.description || 'Nessuna descrizione.'}</p>
+            <div className="mt-3 flex items-center gap-4 text-xs font-semibold text-indigo-400">
+              <span>{section.questions.length} domande registrate</span>
+            </div>
+          </div>
+        </div>
+
+        <Link
+          to={`/play/${section.id}`}
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition ${
+            section.questions.length > 0 
+              ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30' 
+              : 'bg-slate-800 text-slate-500 cursor-not-allowed pointer-events-none'
+          }`}
+        >
+          <Play className="w-5 h-5 fill-current" />
+          Avvia Quiz
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Modulo Upload + Classifica */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <Upload className="w-5 h-5 text-indigo-400" />
+              Carica file Word (.docx)
+            </h2>
+
+            <form onSubmit={handleUpload} className="space-y-4">
+              <div className="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-6 text-center cursor-pointer transition">
+                <input type="file" accept=".docx" onChange={handleFileChange} id="docxInput" className="hidden" />
+                <label htmlFor="docxInput" className="cursor-pointer block">
+                  <FileText className="w-10 h-10 text-slate-500 mx-auto mb-2" />
+                  <span className="text-sm font-medium text-slate-300 block">
+                    {file ? file.name : 'Seleziona un file Word'}
+                  </span>
+                  <span className="text-xs text-slate-500 block mt-1">Formato .docx supportato</span>
+                </label>
+              </div>
+
+              {uploadStatus && (
+                <div className="p-3 bg-emerald-950/50 border border-emerald-800 rounded-lg text-emerald-400 text-xs flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 shrink-0" />
+                  {uploadStatus}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={!file || uploading}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white py-2.5 rounded-lg font-semibold transition text-sm cursor-pointer"
+              >
+                {uploading ? 'Parsing in corso...' : 'Importa Domande'}
+              </button>
+            </form>
+          </div>
+
+          {/* Leaderboard Migliori Punteggi */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-amber-400" />
+              Classifica High Scores
+            </h3>
+            {leaderboard.length === 0 ? (
+              <p className="text-xs text-slate-500">Nessuna partita registrata.</p>
+            ) : (
+              <div className="space-y-2">
+                {leaderboard.map((res, rank) => (
+                  <div key={res.id} className="flex justify-between items-center bg-slate-800/50 px-3 py-2 rounded-lg text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-amber-400">#{rank + 1}</span>
+                      <span className="text-slate-300">{new Date(res.playedAt).toLocaleDateString()}</span>
+                    </div>
+                    <span className="font-bold text-indigo-400">{res.score} / {res.totalQuestions} pt</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Lista Domande con Modifica ed Eliminazione Singola */}
+        <div className="lg:col-span-2">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">Domande Presenti ({section.questions.length})</h2>
+              {section.questions.length > 0 && (
+                <button
+                  onClick={handleClearQuestions}
+                  className="flex items-center gap-1 text-red-400 hover:text-red-300 text-xs font-semibold transition"
+                >
+                  <Trash2 className="w-4 h-4" /> Svuota tutto
+                </button>
+              )}
+            </div>
+
+            {section.questions.length === 0 ? (
+              <div className="text-center py-12 text-slate-500 text-sm">
+                Nessuna domanda caricata. Utilizza il pannello di sinistra per caricare un documento Word.
+              </div>
+            ) : (
+              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+                {section.questions.map((q, idx) => (
+                  <div key={q.id} className="bg-slate-800/60 border border-slate-800 rounded-xl p-4 relative group">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="text-xs font-bold text-indigo-400">Domanda {idx + 1}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="bg-slate-700 text-slate-300 text-[10px] px-2 py-0.5 rounded font-mono">
+                          {q.type}
+                        </span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
+                          q.level === 'FACILE' ? 'bg-emerald-950 text-emerald-400' :
+                          q.level === 'MEDIO' ? 'bg-amber-950 text-amber-400' : 'bg-rose-950 text-rose-400'
+                        }`}>
+                          {q.level}
+                        </span>
+                        
+                        {/* Azioni Modifica e Cancella */}
+                        <button
+                          onClick={() => setEditingQuestion(q)}
+                          className="text-slate-400 hover:text-indigo-400 p-1"
+                          title="Modifica Domanda"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSingleQuestion(q.id)}
+                          className="text-slate-400 hover:text-red-400 p-1"
+                          title="Elimina Domanda"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <p className="text-white text-sm font-medium mb-3">{q.questionText}</p>
+
+                    {q.options?.length > 0 && (
+                      <div className="grid grid-cols-2 gap-2 mb-3">
+                        {q.options.map(opt => (
+                          <div key={opt.id} className="bg-slate-900/50 px-2.5 py-1.5 rounded text-xs text-slate-300 border border-slate-800">
+                            {opt.text}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="text-xs text-emerald-400 font-semibold bg-emerald-950/30 px-3 py-1.5 rounded border border-emerald-900/40">
+                      Risposta corretta: {q.correctAnswer}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <EditQuestionModal
+        isOpen={!!editingQuestion}
+        onClose={() => setEditingQuestion(null)}
+        question={editingQuestion}
+        onQuestionUpdated={fetchSectionData}
+      />
+    </div>
+  );
+}
+</file>
+
+<file path="frontend/src/pages/StoryDetail.jsx">
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import API from '../api/client';
+import { ArrowLeft, Sparkles, MessageSquare } from 'lucide-react';
+
+function RenderFormattedText({ text }) {
+  if (!text) return null;
+  if (typeof text === 'string') return <span>{text}</span>;
+
+  if (Array.isArray(text)) {
+    return (
+      <>
+        {text.map((part, index) => {
+          if (typeof part === 'string') return <span key={index}>{part}</span>;
+          if (typeof part === 'object' && part !== null) {
+            const content = part.text || '';
+            switch (part.type) {
+              case 'bold':
+                return <strong key={index} className="font-bold">{content}</strong>;
+              case 'italic':
+                return <em key={index} className="italic">{content}</em>;
+              case 'strikethrough':
+                return <s key={index} className="line-through">{content}</s>;
+              case 'code':
+                return <code key={index} className="bg-slate-900/60 px-1 py-0.5 rounded font-mono text-xs">{content}</code>;
+              case 'underline':
+                return <u key={index} className="underline">{content}</u>;
+              default:
+                return <span key={index}>{content}</span>;
+            }
+          }
+          return null;
+        })}
+      </>
+    );
+  }
+
+  return null;
+}
+
+export default function StoryDetail() {
+  const { id } = useParams();
+  const [story, setStory] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStory = async () => {
+      try {
+        setLoading(true);
+        const res = await API.get(`/stories/${id}`);
+        setStory(res.data.data);
+      } catch (err) {
+        console.error('Errore caricamento racconto:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStory();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64 text-indigo-400">
+        <Sparkles className="w-8 h-8 animate-spin" />
+        <span className="ml-2 font-medium">Caricamento conversazione...</span>
+      </div>
+    );
+  }
+
+  if (!story) {
+    return (
+      <div className="max-w-xl mx-auto my-12 text-center text-rose-400">
+        Racconto non trovato!
+      </div>
+    );
+  }
+
+let messages = [];
+if (story.messages) {
+  messages = story.messages;
+} else if (Array.isArray(story.content)) {
+  messages = story.content; // Se il JSON di Telegram è un array diretto
+} else if (story.content?.messages) {
+  messages = story.content.messages;
+}
+  const participants = Array.from(new Set(messages.map(m => m.from))).filter(Boolean);
+  const leftParticipant = participants[0] || '';
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-6">
+      <Link to="/stories" className="inline-flex items-center gap-2 text-slate-400 hover:text-white text-xs mb-4 font-semibold transition">
+        <ArrowLeft className="w-4 h-4" /> Torna ai racconti
+      </Link>
+
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 mb-6 shadow-xl flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold text-white mb-1">{story.title}</h1>
+          {story.description && <p className="text-slate-400 text-xs">{story.description}</p>}
+        </div>
+        <div className="flex items-center gap-2 text-indigo-400 bg-indigo-950/60 border border-indigo-800 px-3 py-1.5 rounded-full text-xs font-bold">
+          <MessageSquare className="w-4 h-4" />
+          <span>{messages.length} Messaggi</span>
+        </div>
+      </div>
+
+      <div className="bg-slate-950 border border-slate-900 rounded-3xl p-4 md:p-6 shadow-2xl space-y-3.5 min-h-[500px]">
+        {messages.map((msg, index) => {
+          const isLeft = msg.from === leftParticipant;
+
+          return (
+            <div key={index} className={`flex flex-col ${isLeft ? 'items-start' : 'items-end'}`}>
+              <span className="text-[10px] font-bold text-slate-400 mb-1 px-1">
+                {msg.from}
+              </span>
+
+              <div
+                className={`max-w-[85%] md:max-w-[75%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-md ${
+                  isLeft
+                    ? 'bg-slate-800 text-slate-100 rounded-tl-xs border border-slate-700/60'
+                    : 'bg-indigo-600 text-white rounded-tr-xs shadow-indigo-600/10'
+                }`}
+              >
+                <RenderFormattedText text={msg.text} />
+
+                {msg.date && (
+                  <span className={`block text-[9px] mt-1.5 text-right font-mono ${isLeft ? 'text-slate-400' : 'text-indigo-200'}`}>
+                    {typeof msg.date === 'string' ? msg.date : new Date(msg.date * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="frontend/index.html">
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wonderful</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+</file>
+
+<file path="backend/src/sockets/gameSockets.js">
+const prisma = require('../config/db');
+const fs = require('fs');
+const path = require('path');
+
+const rooms = new Map();
+const MAX_ROUNDS = 10; // Limite fisso di 10 round casuali per partita
+
+function generateRoomCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+function getFirstName(filename) {
+  if (!filename) return '';
+  const nameWithoutExt = filename.substring(0, filename.lastIndexOf('.')) || filename;
+  return nameWithoutExt.trim().split(/\s+/)[0];
+}
+
+function clearRoomTimers(room) {
+  if (!room) return;
+  if (room.timer) {
+    clearInterval(room.timer);
+    room.timer = null;
+  }
+  if (room.roundTimeout) {
+    clearTimeout(room.roundTimeout);
+    room.roundTimeout = null;
+  }
+}
+
+module.exports = function setupGameSockets(io) {
+
+  function startRoundTimer(roomCode) {
+  const room = rooms.get(roomCode);
+  if (!room) return;
+
+  clearRoomTimers(room);
+
+  if (room.currentIndex >= room.questions.length) {
+    room.status = 'ENDED';
+    const sortedPlayers = [...room.players].sort((a, b) => b.score - a.score);
+    io.to(roomCode).emit('game_over', sortedPlayers);
+    return;
+  }
+
+  room.timeLeft = room.timerDuration || 15; // Usa il timer personalizzato della stanza
+  room.status = 'PLAYING';
+  room.lockedRound = false;
+
+  room.players.forEach(p => {
+    p.hasAnswered = false;
+    p.cooldownUntil = 0;
+  });
+
+  const currentQ = room.questions[room.currentIndex];
+
+io.to(roomCode).emit('next_question_ready', {
+  currentQuestion: currentQ,
+  audioLang: room.audioLang, // <-- Invia la lingua selezionata per la stanza
+  currentIndex: room.currentIndex,
+  total: room.questions.length,
+  timeLeft: room.timeLeft,
+  timerDuration: room.timerDuration,
+  players: room.players
+});
+
+    room.timer = setInterval(() => {
+      const liveRoom = rooms.get(roomCode);
+      if (!liveRoom || liveRoom.status !== 'PLAYING') {
+        clearRoomTimers(liveRoom);
+        return;
+      }
+
+      liveRoom.timeLeft -= 1;
+
+      if (liveRoom.timeLeft <= 0) {
+        clearRoomTimers(liveRoom);
+        endRound(roomCode);
+      } else {
+        io.to(roomCode).emit('timer_tick', { timeLeft: liveRoom.timeLeft });
+      }
+    }, 1000);
+  }
+
+  function endRound(roomCode) {
+    const room = rooms.get(roomCode);
+    if (!room || room.status === 'ROUND_REVEAL' || room.status === 'ENDED') return;
+
+    room.status = 'ROUND_REVEAL';
+    clearRoomTimers(room);
+
+    let correctAnswerText = '';
+    const currentQ = room.questions[room.currentIndex];
+
+    if (room.mode === 'KAHOOT') {
+      correctAnswerText = currentQ ? currentQ.correctAnswer : '';
+      room.players.forEach(p => {
+        if (!p.hasAnswered) p.streak = 0;
+      });
+    } else {
+      correctAnswerText = getFirstName(currentQ);
+    }
+
+    io.to(roomCode).emit('round_ended', {
+      correctAnswer: correctAnswerText,
+      players: room.players,
+      currentIndex: room.currentIndex,
+      total: room.questions.length
+    });
+
+    room.roundTimeout = setTimeout(() => {
+      const liveRoom = rooms.get(roomCode);
+      if (!liveRoom || liveRoom.status === 'ENDED') return;
+
+      liveRoom.currentIndex += 1;
+
+      if (liveRoom.currentIndex >= liveRoom.questions.length) {
+        liveRoom.status = 'ENDED';
+        const sortedPlayers = [...liveRoom.players].sort((a, b) => b.score - a.score);
+        io.to(roomCode).emit('game_over', sortedPlayers);
+      } else {
+        startRoundTimer(roomCode);
+      }
+    }, 4000);
+  }
+
+  io.on('connection', (socket) => {
+
+// backend/src/sockets/gameSockets.js
+
+socket.on('create_room', async ({ mode, sectionId, playerName, avatar, timerDuration = 15, totalRounds = 10, audioLang = 'jp' }) => {
+  const roomCode = generateRoomCode();
+  let questions = [];
+
+  if (mode === 'KAHOOT') {
+    const queryOptions = sectionId
+      ? { where: { sectionId }, include: { options: true, section: { select: { title: true } } } }
+      : { include: { options: true, section: { select: { title: true } } } };
+    questions = await prisma.question.findMany(queryOptions);
+  } else if (mode === 'FASTEST_FINGER' || mode === 'BLUR_DUEL') {
+    const charDir = path.join(__dirname, '../../static/characters');
+    if (fs.existsSync(charDir)) {
+      questions = fs.readdirSync(charDir).filter(f => /\.(png|jpe?g|webp)$/i.test(f));
+    }
+  } else if (mode === 'AUDIO_DUEL') {
+    // Seleziona la sottocartella in base alla lingua scelta ('jp' o 'it')
+    const selectedLang = ['jp', 'it'].includes(audioLang) ? audioLang : 'jp';
+    const audioDir = path.join(__dirname, `../../static/audio/${selectedLang}`);
+    
+    if (fs.existsSync(audioDir)) {
+      questions = fs.readdirSync(audioDir).filter(f => /\.(mp3|wav|ogg|m4a|aac)$/i.test(f));
+    }
+  }
+
+  if (questions.length === 0) {
+    return socket.emit('error_msg', 'Nessuna domanda o file audio disponibile per questa modalità');
+  }
+
+  const maxLimit = totalRounds === 'ENDLESS' ? questions.length : Math.min(Number(totalRounds), questions.length);
+  questions = questions.sort(() => 0.5 - Math.random()).slice(0, maxLimit);
+
+  const selectedTimer = Number(timerDuration) || 15;
+
+  const newRoom = {
+    code: roomCode,
+    mode,
+    audioLang, // Salviamo la lingua scelta nella stanza
+    hostId: socket.id,
+    status: 'LOBBY',
+    currentIndex: 0,
+    questions,
+    players: [{ id: socket.id, name: playerName, avatar, score: 0, streak: 0, hasAnswered: false, cooldownUntil: 0 }],
+    lockedRound: false,
+    timer: null,
+    roundTimeout: null,
+    timerDuration: selectedTimer,
+    timeLeft: selectedTimer
+  };
+
+  rooms.set(roomCode, newRoom);
+  socket.join(roomCode);
+  socket.emit('room_created', { roomCode, room: newRoom });
+});
+
+    socket.on('join_room', ({ roomCode, playerName, avatar }) => {
+      const room = rooms.get(roomCode);
+      if (!room) return socket.emit('error_msg', 'Stanza non trovata');
+      if (room.status !== 'LOBBY') return socket.emit('error_msg', 'Partita già iniziata');
+
+      room.players.push({ id: socket.id, name: playerName, avatar, score: 0, streak: 0, hasAnswered: false, cooldownUntil: 0 });
+      socket.join(roomCode);
+
+      io.to(roomCode).emit('player_list_updated', room.players);
+      socket.emit('joined_successfully', { roomCode, room });
+    });
+
+    socket.on('start_game', ({ roomCode }) => {
+      const room = rooms.get(roomCode);
+      if (!room || room.hostId !== socket.id || room.status !== 'LOBBY') return;
+
+      room.currentIndex = 0;
+io.to(roomCode).emit('game_started', {
+  roomCode: room.code,
+  mode: room.mode,
+  audioLang: room.audioLang,
+  total: room.questions.length,
+  currentIndex: 0,
+  currentQuestion: room.questions[0],
+  players: room.players,
+  timeLeft: room.timerDuration,
+  timerDuration: room.timerDuration
+});
+
+      startRoundTimer(roomCode);
+    });
+
+    socket.on('submit_kahoot_answer', ({ roomCode, answer }) => {
+      const room = rooms.get(roomCode);
+      if (!room || room.status !== 'PLAYING') return;
+
+      const player = room.players.find(p => p.id === socket.id);
+      if (!player || player.hasAnswered) return;
+
+      player.hasAnswered = true;
+      const q = room.questions[room.currentIndex];
+
+      const normUser = answer.toLowerCase().trim();
+      const normCorrect = q ? q.correctAnswer.toLowerCase().trim() : '';
+
+      // Confronto esatto o contenimento della stringa
+      const isCorrect = normUser === normCorrect || (normCorrect.length > 0 && normCorrect.includes(normUser));
+
+      if (isCorrect) {
+        player.streak += 1;
+        const multiplier = 1 + Math.min(player.streak - 1, 3) * 0.25;
+        const basePoints = 500 + (room.timeLeft * 30);
+        const points = Math.round(basePoints * multiplier);
+        player.score += points;
+
+        socket.emit('answer_feedback', { correct: true, pointsGained: points, streak: player.streak });
+      } else {
+        player.streak = 0;
+        socket.emit('answer_feedback', { correct: false, pointsGained: 0, streak: 0 });
+      }
+
+      io.to(roomCode).emit('score_updated', room.players);
+
+      if (room.players.every(p => p.hasAnswered)) {
+        endRound(roomCode);
+      }
+    });
+
+    socket.on('submit_fastest_finger_guess', ({ roomCode, guess }) => {
+      const room = rooms.get(roomCode);
+      if (!room || room.status !== 'PLAYING' || room.lockedRound) return;
+
+      const player = room.players.find(p => p.id === socket.id);
+      if (!player) return;
+
+      if (Date.now() < player.cooldownUntil) {
+        return socket.emit('cooldown_active');
+      }
+
+      const currentFile = room.questions[room.currentIndex];
+      const firstName = getFirstName(currentFile);
+
+      if (guess.toLowerCase().trim() === firstName.toLowerCase()) {
+        room.lockedRound = true;
+
+        let points = 100;
+        if (room.mode === 'BLUR_DUEL') {
+          points = Math.max(20, Math.round(room.timeLeft * 20));
+        }
+
+        player.score += points;
+
+        io.to(roomCode).emit('round_stolen', {
+          winnerName: player.name,
+          winnerAvatar: player.avatar,
+          correctName: firstName,
+          pointsGained: points,
+          players: room.players
+        });
+
+        endRound(roomCode);
+      } else {
+        player.cooldownUntil = Date.now() + 3000;
+        socket.emit('guess_error', { message: 'Errato! Bloccato per 3s', seconds: 3 });
+      }
+    });
+
+    socket.on('send_reaction', ({ roomCode, emoji }) => {
+      const room = rooms.get(roomCode);
+      if (!room) return;
+      const player = room.players.find(p => p.id === socket.id);
+      if (player) {
+        io.to(roomCode).emit('player_reaction', {
+          playerId: socket.id,
+          playerName: player.name,
+          avatar: player.avatar,
+          emoji
+        });
+      }
+    });
+
+    socket.on('disconnect', () => {
+      rooms.forEach((room, code) => {
+        room.players = room.players.filter(p => p.id !== socket.id);
+        if (room.players.length === 0) {
+          clearRoomTimers(room);
+          rooms.delete(code);
+        } else {
+          io.to(code).emit('player_list_updated', room.players);
+        }
+      });
+    });
+  });
+};
+</file>
+
+<file path="backend/src/utils/uploadConfig.js">
+const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('../config/cloudinary');
+const path = require('path');
+const fs = require('fs');
+
+const tempDir = 'uploads/temp';
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir, { recursive: true });
+}
+
+// Storage Cloudinary per Copertine e File JSON
+const cloudinaryStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => {
+    // Se è il file JSON della storia
+if (file.fieldname === 'jsonFile' || file.mimetype === 'application/json') {
+  return {
+    folder: 'quiz_stories_json',
+    resource_type: 'raw' // Rimosso format: 'json'
+  };
+}
+    // Altrimenti imposta come Immagine di Copertina
+    return {
+      folder: 'quiz_covers',
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+      resource_type: 'image',
+    };
+  },
+});
+
+// Storage temporaneo su disco SOLO per i file Word (.docx)
+const diskStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, tempDir),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, `${file.fieldname}-${uniqueSuffix}${path.extname(file.originalname)}`);
+  }
+});
+
+const customStorage = {
+  _handleFile(req, file, cb) {
+    if (file.fieldname === 'coverImage' || file.fieldname === 'jsonFile') {
+      cloudinaryStorage._handleFile(req, file, cb);
+    } else {
+      diskStorage._handleFile(req, file, cb);
+    }
+  },
+  _removeFile(req, file, cb) {
+    if (file.fieldname === 'coverImage' || file.fieldname === 'jsonFile') {
+      cloudinaryStorage._removeFile(req, file, cb);
+    } else {
+      diskStorage._removeFile(req, file, cb);
+    }
+  }
+};
+
+const upload = multer({ 
+  storage: customStorage,
+  limits: { fileSize: 100 * 1024 * 1024 }
+});
+
+module.exports = upload;
+</file>
+
+<file path="backend/package.json">
+{
+  "name": "anime-quiz-backend",
+  "version": "1.0.0",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "cloudinary": "^1.41.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mammoth": "^1.12.1",
+    "multer": "^2.2.0",
+    "multer-storage-cloudinary": "^4.0.0",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "prisma": "^5.22.0"
+  },
+  "description": "",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
+</file>
+
+<file path="frontend/src/components/CreateSectionModal.jsx">
+import React, { useState } from 'react';
+import { X, UploadCloud, CheckCircle2 } from 'lucide-react';
+
+export default function CreateSectionModal({ isOpen, onClose, onSuccess }) {
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('');
+  const [description, setDescription] = useState('');
+  const [wordFile, setWordFile] = useState(null);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Esegui la logica di invio o chiamata API qui...
+    
+    // Reset dello stato locale
+    setTitle('');
+    setCategory('');
+    setDescription('');
+    setWordFile(null);
+
+    if (onSuccess) onSuccess();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden relative">
+        
+        {/* Glow Decorativo top */}
+        <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+
+        {/* Modal Header */}
+        <div className="px-6 pt-6 pb-4 flex items-center justify-between border-b border-slate-800/60">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            Crea Nuova Sezione Quiz
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition cursor-pointer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          
+          {/* Input Titolo */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              Titolo Sezione
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="es. Naruto Shippuden - Arca Akatsuki"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full px-4 py-2.5 bg-slate-800/80 border border-slate-700/80 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-sm text-white placeholder-slate-500 transition focus:outline-none"
+            />
+          </div>
+
+          {/* Input Categoria */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              Categoria / Genere
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="es. Shonen, Seinen, Isekai..."
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full px-4 py-2.5 bg-slate-800/80 border border-slate-700/80 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-sm text-white placeholder-slate-500 transition focus:outline-none"
+            />
+          </div>
+
+          {/* Input Descrizione */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              Descrizione
+            </label>
+            <textarea
+              rows={3}
+              placeholder="Breve introduzione al contenuto del quiz..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-4 py-2.5 bg-slate-800/80 border border-slate-700/80 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-sm text-white placeholder-slate-500 transition focus:outline-none resize-none"
+            />
+          </div>
+
+          {/* Area File Upload Word (.docx) */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              Documento Domande (.docx)
+            </label>
+            <label className={`border-2 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center cursor-pointer transition ${
+              wordFile 
+                ? 'border-emerald-500/50 bg-emerald-500/5' 
+                : 'border-slate-700 hover:border-indigo-500/50 bg-slate-800/40 hover:bg-slate-800/80'
+            }`}>
+              <input
+                type="file"
+                accept=".docx"
+                onChange={(e) => setWordFile(e.target.files[0])}
+                className="hidden"
+              />
+              {wordFile ? (
+                <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold">
+                  <CheckCircle2 className="w-5 h-5 shrink-0" />
+                  <span className="truncate max-w-[240px]">{wordFile.name}</span>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <UploadCloud className="w-7 h-7 text-indigo-400 mx-auto mb-1.5" />
+                  <p className="text-xs font-medium text-slate-300">
+                    Clicca per caricare il file Word
+                  </p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">Formato accetto: .docx</p>
+                </div>
+              )}
+            </label>
+          </div>
+
+          {/* Modal Footer */}
+          <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-800/60">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2.5 text-xs font-semibold text-slate-400 hover:text-white transition cursor-pointer"
+            >
+              Annulla
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-indigo-600/20 transition cursor-pointer"
+            >
+              Crea Sezione
+            </button>
+          </div>
+
+        </form>
       </div>
     </div>
   );
@@ -7512,642 +8405,6 @@ const handlePlayerReaction = (reaction) => {
 }
 </file>
 
-<file path="frontend/src/pages/QuizPlay.jsx">
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import API from '../api/client';
-import confetti from 'canvas-confetti';
-import { CheckCircle2, XCircle, Trophy, RotateCcw, Home, Sparkles, Play, Layers, Zap, User, Award, Shield } from 'lucide-react';
-import Toast from '../components/Toast';
-
-export default function QuizPlay() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-
-  const [gameStarted, setGameStarted] = useState(false);
-  const [totalQuestionsCount, setTotalQuestionsCount] = useState(0);
-
-  // Gamification e Nickname
-  const [playerName, setPlayerName] = useState(localStorage.getItem('playerName') || '');
-
-  const [questions, setQuestions] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState('');
-  const [shortAnswerInput, setShortAnswerInput] = useState('');
-  const [isAnswered, setIsAnswered] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
-  const [score, setScore] = useState(0);
-  const [isFinished, setIsFinished] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState(null);
-
-  useEffect(() => {
-    const fetchSectionInfo = async () => {
-      try {
-        setLoading(true);
-        const res = await API.get(`/sections/${id}`);
-        setTotalQuestionsCount(res.data.data.questions.length);
-      } catch (err) {
-        setToast({ message: 'Errore nel caricamento della sezione!', type: 'error' });
-        setTimeout(() => navigate('/'), 1500);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSectionInfo();
-  }, [id, navigate]);
-
-  const startQuiz = async (limitParam) => {
-    if (!playerName.trim()) {
-      setToast({ message: 'Inserisci un nickname prima di giocare!', type: 'error' });
-      return;
-    }
-    localStorage.setItem('playerName', playerName.trim());
-
-    try {
-      setLoading(true);
-      const res = await API.get(`/quiz/sections/${id}/play?limit=${limitParam}`);
-      setQuestions(res.data.data);
-      setGameStarted(true);
-    } catch (err) {
-      setToast({ message: 'Errore nell\'avvio del quiz!', type: 'error' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const currentQuestion = questions[currentIndex];
-
-  const handleSelectOption = (answerText) => {
-    if (isAnswered) return;
-    setSelectedAnswer(answerText);
-    validateAnswer(answerText);
-  };
-
-  const handleShortAnswerSubmit = (e) => {
-    e.preventDefault();
-    if (isAnswered || !shortAnswerInput.trim()) return;
-    setSelectedAnswer(shortAnswerInput.trim());
-    validateAnswer(shortAnswerInput.trim());
-  };
-
-  const validateAnswer = (userAns) => {
-    setIsAnswered(true);
-    const normalizedUser = userAns.toLowerCase().trim();
-    const normalizedCorrect = currentQuestion.correctAnswer.toLowerCase().trim();
-    const correct = normalizedUser === normalizedCorrect || normalizedCorrect.includes(normalizedUser);
-
-    setIsCorrect(correct);
-    if (correct) {
-      setScore(prev => prev + 1);
-    }
-  };
-
-  const handleNextQuestion = () => {
-    if (currentIndex + 1 < questions.length) {
-      setCurrentIndex(prev => prev + 1);
-      setSelectedAnswer('');
-      setShortAnswerInput('');
-      setIsAnswered(false);
-      setIsCorrect(false);
-    } else {
-      finishQuiz();
-    }
-  };
-
-  const finishQuiz = async () => {
-    setIsFinished(true);
-    confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
-
-    try {
-      await API.post(`/quiz/sections/${id}/results`, {
-        score: score,
-        totalQuestions: questions.length,
-        playerName: playerName.trim() || 'Anonimo'
-      });
-    } catch (err) {
-      console.error('Errore nel salvataggio del risultato:', err);
-    }
-  };
-
-  // Helper per assegnare i badge basati sulla percentuale di accuratezza
-  const getBadge = (percentage) => {
-    if (percentage === 100) {
-      return { title: 'Leggenda Anime', color: 'bg-amber-500/10 text-amber-400 border-amber-500/30', icon: Trophy };
-    } else if (percentage >= 80) {
-      return { title: 'Maestro Otaku', color: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30', icon: Award };
-    } else if (percentage >= 50) {
-      return { title: 'Otaku Apprendista', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30', icon: Shield };
-    } else {
-      return { title: 'Novizio Anime', color: 'bg-slate-500/10 text-slate-400 border-slate-500/30', icon: User };
-    }
-  };
-
-  if (loading) return <div className="text-center py-20 text-slate-400">Caricamento in corso...</div>;
-
-  // SCHERMATA 1: Selezione Modalità e Inserimento Profilo Utente
-  if (!gameStarted) {
-    return (
-      <div className="max-w-xl mx-auto my-12 px-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center text-white shadow-2xl">
-          <Sparkles className="w-12 h-12 text-indigo-400 mx-auto mb-3" />
-          <h1 className="text-3xl font-extrabold mb-2">Preparati al Quiz</h1>
-          <p className="text-slate-400 text-sm mb-6">
-            Domande disponibili in questa sezione: <span className="text-indigo-400 font-bold">{totalQuestionsCount}</span>
-          </p>
-
-          {/* Profilo Nickname */}
-          <div className="mb-8 text-left bg-slate-800/60 border border-slate-700/80 p-4 rounded-2xl">
-            <label className="block text-xs font-bold text-slate-300 uppercase mb-2 flex items-center gap-1.5">
-              <User className="w-4 h-4 text-indigo-400" /> Il tuo Nickname Giocatore *
-            </label>
-            <input
-              type="text"
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-              placeholder="Inserisci il tuo nome..."
-              className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold focus:outline-none focus:border-indigo-500"
-            />
-          </div>
-
-          <div className="space-y-4">
-            {totalQuestionsCount >= 15 && (
-              <button
-                onClick={() => startQuiz('15')}
-                className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-indigo-500 p-5 rounded-2xl flex items-center justify-between text-left transition cursor-pointer group"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="bg-indigo-600/20 text-indigo-400 p-3 rounded-xl group-hover:scale-110 transition">
-                    <Zap className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <div className="font-bold text-lg">Partita Rapida</div>
-                    <div className="text-xs text-slate-400">15 domande estratte a caso</div>
-                  </div>
-                </div>
-                <Play className="w-5 h-5 text-indigo-400" />
-              </button>
-            )}
-
-            <button
-              onClick={() => startQuiz('all')}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 p-5 rounded-2xl flex items-center justify-between text-left transition cursor-pointer shadow-lg shadow-indigo-600/20 group"
-            >
-              <div className="flex items-center gap-4">
-                <div className="bg-white/20 text-white p-3 rounded-xl group-hover:scale-110 transition">
-                  <Layers className="w-6 h-6" />
-                </div>
-                <div>
-                  <div className="font-bold text-lg">Tutte le Domande</div>
-                  <div className="text-xs text-indigo-100">
-                    Tutte le {totalQuestionsCount} domande mescolate
-                  </div>
-                </div>
-              </div>
-              <Play className="w-5 h-5 text-white fill-current" />
-            </button>
-          </div>
-        </div>
-        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-      </div>
-    );
-  }
-
-  // SCHERMATA FINALE: Risultati + Badge Gamification
-  if (isFinished) {
-    const percentage = Math.round((score / questions.length) * 100);
-    const badge = getBadge(percentage);
-    const BadgeIcon = badge.icon;
-
-    return (
-      <div className="max-w-md mx-auto my-12 px-4">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 text-center text-white shadow-2xl">
-          <Trophy className="w-16 h-16 text-amber-400 mx-auto mb-3 animate-bounce" />
-          <h1 className="text-3xl font-extrabold mb-1">Quiz Completato!</h1>
-          <p className="text-slate-400 text-sm mb-4">Ottimo lavoro <span className="text-white font-bold">{playerName}</span>!</p>
-
-          {/* Badge sbloccato */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border text-xs font-bold mb-6 ${badge.color}">
-            <BadgeIcon className="w-4 h-4" />
-            <span>BADGE: {badge.title}</span>
-          </div>
-
-          <div className="bg-slate-800/80 rounded-2xl p-6 mb-6">
-            <div className="text-5xl font-black text-indigo-400 mb-2">{score} / {questions.length}</div>
-            <div className="text-sm font-semibold text-slate-300">Accuratezza: {percentage}%</div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <button onClick={() => window.location.reload()} className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 py-3 rounded-xl font-semibold transition text-sm cursor-pointer">
-              <RotateCcw className="w-4 h-4" /> Rigioca
-            </button>
-            <button onClick={() => navigate('/')} className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 py-3 rounded-xl font-semibold transition text-sm cursor-pointer">
-              <Home className="w-4 h-4" /> Home
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const isInputAnswer = currentQuestion.type === 'SHORT_ANSWER' || 
-    (currentQuestion.type !== 'BOOLEAN' && (!currentQuestion.options || currentQuestion.options.length === 0));
-
-  return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <div className="mb-6 flex items-center justify-between text-slate-400 text-sm">
-        <span className="font-bold text-indigo-400">Domanda {currentIndex + 1} di {questions.length}</span>
-        <span className="bg-slate-800 px-3 py-1 rounded-full text-xs font-semibold">Punti: {score}</span>
-      </div>
-
-      <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden mb-8">
-        <div className="bg-indigo-500 h-full transition-all duration-300" style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }} />
-      </div>
-
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 md:p-8 text-white shadow-xl mb-6">
-        <div className="flex gap-2 mb-4">
-          <span className="text-[10px] font-bold bg-indigo-950 text-indigo-400 px-2.5 py-1 rounded-full uppercase">{currentQuestion.type}</span>
-          <span className="text-[10px] font-bold bg-slate-800 text-slate-300 px-2.5 py-1 rounded-full">{currentQuestion.level}</span>
-        </div>
-
-        <h2 className="text-xl md:text-2xl font-bold mb-8 leading-snug">{currentQuestion.questionText}</h2>
-
-        {isInputAnswer ? (
-          <form onSubmit={handleShortAnswerSubmit} className="space-y-4">
-            <input
-              type="text"
-              disabled={isAnswered}
-              value={shortAnswerInput}
-              onChange={(e) => setShortAnswerInput(e.target.value)}
-              placeholder="Scrivi la tua risposta qui..."
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 disabled:opacity-60"
-            />
-            {!isAnswered && (
-              <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition cursor-pointer">Invia Risposta</button>
-            )}
-          </form>
-        ) : currentQuestion.type === 'BOOLEAN' ? (
-          <div className="grid grid-cols-2 gap-4">
-            {['Vero', 'Falso'].map((opt) => (
-              <button
-                key={opt}
-                disabled={isAnswered}
-                onClick={() => handleSelectOption(opt)}
-                className={`p-4 rounded-2xl font-bold border transition text-center cursor-pointer ${
-                  selectedAnswer === opt
-                    ? isCorrect ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-rose-600 border-rose-500 text-white'
-                    : 'bg-slate-800 border-slate-700 hover:border-indigo-500 text-slate-200'
-                }`}
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {currentQuestion.options?.map((opt) => {
-              const isSelected = selectedAnswer === opt.text;
-              let btnStyle = 'bg-slate-800/80 border-slate-700/80 text-slate-200 hover:border-indigo-500';
-
-              if (isAnswered) {
-                if (isSelected) {
-                  btnStyle = isCorrect ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-rose-600 border-rose-500 text-white';
-                } else if (opt.text.toLowerCase().trim() === currentQuestion.correctAnswer.toLowerCase().trim()) {
-                  btnStyle = 'bg-emerald-950/80 border-emerald-800 text-emerald-400';
-                }
-              }
-
-              return (
-                <button
-                  key={opt.id}
-                  disabled={isAnswered}
-                  onClick={() => handleSelectOption(opt.text)}
-                  className={`w-full p-4 rounded-xl font-medium text-left border transition flex items-center justify-between cursor-pointer ${btnStyle}`}
-                >
-                  <span>{opt.text}</span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-
-        {isAnswered && (
-          <div className={`mt-6 p-4 rounded-2xl flex items-center gap-3 ${
-            isCorrect ? 'bg-emerald-950/60 border border-emerald-800 text-emerald-300' : 'bg-rose-950/60 border border-rose-800 text-rose-300'
-          }`}>
-            {isCorrect ? <CheckCircle2 className="w-6 h-6 shrink-0" /> : <XCircle className="w-6 h-6 shrink-0" />}
-            <div>
-              <div className="font-bold text-sm">{isCorrect ? 'Risposta Esatta!' : 'Risposta Errata!'}</div>
-              {!isCorrect && (
-                <div className="text-xs mt-0.5">Risposta corretta: <span className="underline font-bold">{currentQuestion.correctAnswer}</span></div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {isAnswered && (
-        <button
-          onClick={handleNextQuestion}
-          className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-2xl transition shadow-lg shadow-indigo-600/20 cursor-pointer flex items-center justify-center gap-2"
-        >
-          <span>{currentIndex + 1 < questions.length ? 'Prossima Domanda' : 'Vedi Risultati'}</span>
-          <Sparkles className="w-5 h-5" />
-        </button>
-      )}
-    </div>
-  );
-}
-</file>
-
-<file path="frontend/src/pages/SectionDetail.jsx">
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import API, { SERVER_URL } from '../api/client';
-import EditQuestionModal from '../components/EditQuestionModal';
-import { Upload, FileText, Play, Trash2, ArrowLeft, Trophy, CheckCircle, Edit3 } from 'lucide-react';
-
-export default function SectionDetail() {
-  const { id } = useParams();
-  const [section, setSection] = useState(null);
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [file, setFile] = useState(null);
-  const [uploadStatus, setUploadStatus] = useState(null);
-  const [editingQuestion, setEditingQuestion] = useState(null);
-const getImageUrl = (path) => {
-  if (!path) return 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=60';
-  return path.startsWith('http') ? path : `${SERVER_URL}${path}`;
-};
-const fetchSectionData = async () => {
-    try {
-      setLoading(true);
-      const [resSection, resLeaderboard] = await Promise.all([
-        API.get(`/sections/${id}`),
-        API.get(`/quiz/sections/${id}/leaderboard`)
-      ]);
-
-      const rawData = resSection.data.data;
-      const sectionData = Array.isArray(rawData) ? rawData[0] : rawData;
-
-      if (sectionData) {
-        setSection({
-          ...sectionData,
-          questions: sectionData.questions || []
-        });
-      }
-
-      setLeaderboard(resLeaderboard.data.data || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-useEffect(() => {
-    fetchSectionData();
-  }, [id]);
-  const handleFileChange = (e) => {
-    const selected = e.target.files[0];
-    if (selected && selected.name.endsWith('.docx')) {
-      setFile(selected);
-      setUploadStatus(null);
-    } else {
-      alert('Seleziona un file valido con estensione .docx');
-    }
-  };
-
-  const handleUpload = async (e) => {
-    e.preventDefault();
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('docxFile', file);
-
-    try {
-      setUploading(true);
-      const res = await API.post(`/quiz/sections/${id}/upload-docx`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      setUploadStatus(`Successo! Importate ${res.data.count} domande.`);
-      setFile(null);
-      fetchSectionData();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Errore nell\'upload del file');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleDeleteSingleQuestion = async (qId) => {
-    if (!window.confirm('Eliminare questa specifica domanda?')) return;
-    try {
-      await API.delete(`/quiz/questions/${qId}`);
-      fetchSectionData();
-    } catch (err) {
-      alert('Errore durante l\'eliminazione della domanda');
-    }
-  };
-
-  const handleClearQuestions = async () => {
-    if (!window.confirm('Vuoi rimuovere TUTTE le domande salvate per questa sezione?')) return;
-    try {
-      await API.delete(`/quiz/sections/${id}/questions`);
-      fetchSectionData();
-    } catch (err) {
-      alert('Errore nello svuotamento delle domande');
-    }
-  };
-
-  if (loading) return <div className="text-center py-20 text-slate-400">Caricamento in corso...</div>;
-  if (!section) return <div className="text-center py-20 text-red-400">Sezione non trovata!</div>;
-
-  return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-<Link to="/admin" className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 text-sm">
-  <ArrowLeft className="w-4 h-4" /> Torna al Pannello Admin
-</Link>
-
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-8 flex flex-col md:flex-row gap-6 items-center justify-between">
-        <div className="flex items-center gap-5">
-<img 
-  src={getImageUrl(section.coverImage)} 
-  alt={section.title}
-  className="w-24 h-24 rounded-xl object-cover border border-slate-700" 
-/>
-          <div>
-            <h1 className="text-3xl font-extrabold text-white mb-1">{section.title}</h1>
-            <p className="text-slate-400 text-sm">{section.description || 'Nessuna descrizione.'}</p>
-            <div className="mt-3 flex items-center gap-4 text-xs font-semibold text-indigo-400">
-              <span>{section.questions.length} domande registrate</span>
-            </div>
-          </div>
-        </div>
-
-        <Link
-          to={`/play/${section.id}`}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition ${
-            section.questions.length > 0 
-              ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30' 
-              : 'bg-slate-800 text-slate-500 cursor-not-allowed pointer-events-none'
-          }`}
-        >
-          <Play className="w-5 h-5 fill-current" />
-          Avvia Quiz
-        </Link>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Modulo Upload + Classifica */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <Upload className="w-5 h-5 text-indigo-400" />
-              Carica file Word (.docx)
-            </h2>
-
-            <form onSubmit={handleUpload} className="space-y-4">
-              <div className="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-6 text-center cursor-pointer transition">
-                <input type="file" accept=".docx" onChange={handleFileChange} id="docxInput" className="hidden" />
-                <label htmlFor="docxInput" className="cursor-pointer block">
-                  <FileText className="w-10 h-10 text-slate-500 mx-auto mb-2" />
-                  <span className="text-sm font-medium text-slate-300 block">
-                    {file ? file.name : 'Seleziona un file Word'}
-                  </span>
-                  <span className="text-xs text-slate-500 block mt-1">Formato .docx supportato</span>
-                </label>
-              </div>
-
-              {uploadStatus && (
-                <div className="p-3 bg-emerald-950/50 border border-emerald-800 rounded-lg text-emerald-400 text-xs flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 shrink-0" />
-                  {uploadStatus}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={!file || uploading}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white py-2.5 rounded-lg font-semibold transition text-sm cursor-pointer"
-              >
-                {uploading ? 'Parsing in corso...' : 'Importa Domande'}
-              </button>
-            </form>
-          </div>
-
-          {/* Leaderboard Migliori Punteggi */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-            <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-amber-400" />
-              Classifica High Scores
-            </h3>
-            {leaderboard.length === 0 ? (
-              <p className="text-xs text-slate-500">Nessuna partita registrata.</p>
-            ) : (
-              <div className="space-y-2">
-                {leaderboard.map((res, rank) => (
-                  <div key={res.id} className="flex justify-between items-center bg-slate-800/50 px-3 py-2 rounded-lg text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-amber-400">#{rank + 1}</span>
-                      <span className="text-slate-300">{new Date(res.playedAt).toLocaleDateString()}</span>
-                    </div>
-                    <span className="font-bold text-indigo-400">{res.score} / {res.totalQuestions} pt</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Lista Domande con Modifica ed Eliminazione Singola */}
-        <div className="lg:col-span-2">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">Domande Presenti ({section.questions.length})</h2>
-              {section.questions.length > 0 && (
-                <button
-                  onClick={handleClearQuestions}
-                  className="flex items-center gap-1 text-red-400 hover:text-red-300 text-xs font-semibold transition"
-                >
-                  <Trash2 className="w-4 h-4" /> Svuota tutto
-                </button>
-              )}
-            </div>
-
-            {section.questions.length === 0 ? (
-              <div className="text-center py-12 text-slate-500 text-sm">
-                Nessuna domanda caricata. Utilizza il pannello di sinistra per caricare un documento Word.
-              </div>
-            ) : (
-              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-                {section.questions.map((q, idx) => (
-                  <div key={q.id} className="bg-slate-800/60 border border-slate-800 rounded-xl p-4 relative group">
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="text-xs font-bold text-indigo-400">Domanda {idx + 1}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="bg-slate-700 text-slate-300 text-[10px] px-2 py-0.5 rounded font-mono">
-                          {q.type}
-                        </span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
-                          q.level === 'FACILE' ? 'bg-emerald-950 text-emerald-400' :
-                          q.level === 'MEDIO' ? 'bg-amber-950 text-amber-400' : 'bg-rose-950 text-rose-400'
-                        }`}>
-                          {q.level}
-                        </span>
-                        
-                        {/* Azioni Modifica e Cancella */}
-                        <button
-                          onClick={() => setEditingQuestion(q)}
-                          className="text-slate-400 hover:text-indigo-400 p-1"
-                          title="Modifica Domanda"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteSingleQuestion(q.id)}
-                          className="text-slate-400 hover:text-red-400 p-1"
-                          title="Elimina Domanda"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <p className="text-white text-sm font-medium mb-3">{q.questionText}</p>
-
-                    {q.options?.length > 0 && (
-                      <div className="grid grid-cols-2 gap-2 mb-3">
-                        {q.options.map(opt => (
-                          <div key={opt.id} className="bg-slate-900/50 px-2.5 py-1.5 rounded text-xs text-slate-300 border border-slate-800">
-                            {opt.text}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="text-xs text-emerald-400 font-semibold bg-emerald-950/30 px-3 py-1.5 rounded border border-emerald-900/40">
-                      Risposta corretta: {q.correctAnswer}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <EditQuestionModal
-        isOpen={!!editingQuestion}
-        onClose={() => setEditingQuestion(null)}
-        question={editingQuestion}
-        onQuestionUpdated={fetchSectionData}
-      />
-    </div>
-  );
-}
-</file>
-
 <file path="frontend/src/pages/StoriesList.jsx">
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -8246,437 +8503,6 @@ export default function StoriesList({ stories, onDeleteStory, isAdmin }) {
 
       </div>
     </div>
-  );
-}
-</file>
-
-<file path="frontend/src/pages/StoryDetail.jsx">
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import API from '../api/client';
-import { ArrowLeft, Sparkles, MessageSquare } from 'lucide-react';
-
-function RenderFormattedText({ text }) {
-  if (!text) return null;
-  if (typeof text === 'string') return <span>{text}</span>;
-
-  if (Array.isArray(text)) {
-    return (
-      <>
-        {text.map((part, index) => {
-          if (typeof part === 'string') return <span key={index}>{part}</span>;
-          if (typeof part === 'object' && part !== null) {
-            const content = part.text || '';
-            switch (part.type) {
-              case 'bold':
-                return <strong key={index} className="font-bold">{content}</strong>;
-              case 'italic':
-                return <em key={index} className="italic">{content}</em>;
-              case 'strikethrough':
-                return <s key={index} className="line-through">{content}</s>;
-              case 'code':
-                return <code key={index} className="bg-slate-900/60 px-1 py-0.5 rounded font-mono text-xs">{content}</code>;
-              case 'underline':
-                return <u key={index} className="underline">{content}</u>;
-              default:
-                return <span key={index}>{content}</span>;
-            }
-          }
-          return null;
-        })}
-      </>
-    );
-  }
-
-  return null;
-}
-
-export default function StoryDetail() {
-  const { id } = useParams();
-  const [story, setStory] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchStory = async () => {
-      try {
-        setLoading(true);
-        const res = await API.get(`/stories/${id}`);
-        setStory(res.data.data);
-      } catch (err) {
-        console.error('Errore caricamento racconto:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchStory();
-  }, [id]);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64 text-indigo-400">
-        <Sparkles className="w-8 h-8 animate-spin" />
-        <span className="ml-2 font-medium">Caricamento conversazione...</span>
-      </div>
-    );
-  }
-
-  if (!story) {
-    return (
-      <div className="max-w-xl mx-auto my-12 text-center text-rose-400">
-        Racconto non trovato!
-      </div>
-    );
-  }
-
-let messages = [];
-if (story.messages) {
-  messages = story.messages;
-} else if (Array.isArray(story.content)) {
-  messages = story.content; // Se il JSON di Telegram è un array diretto
-} else if (story.content?.messages) {
-  messages = story.content.messages;
-}
-  const participants = Array.from(new Set(messages.map(m => m.from))).filter(Boolean);
-  const leftParticipant = participants[0] || '';
-
-  return (
-    <div className="max-w-3xl mx-auto px-4 py-6">
-      <Link to="/stories" className="inline-flex items-center gap-2 text-slate-400 hover:text-white text-xs mb-4 font-semibold transition">
-        <ArrowLeft className="w-4 h-4" /> Torna ai racconti
-      </Link>
-
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 mb-6 shadow-xl flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold text-white mb-1">{story.title}</h1>
-          {story.description && <p className="text-slate-400 text-xs">{story.description}</p>}
-        </div>
-        <div className="flex items-center gap-2 text-indigo-400 bg-indigo-950/60 border border-indigo-800 px-3 py-1.5 rounded-full text-xs font-bold">
-          <MessageSquare className="w-4 h-4" />
-          <span>{messages.length} Messaggi</span>
-        </div>
-      </div>
-
-      <div className="bg-slate-950 border border-slate-900 rounded-3xl p-4 md:p-6 shadow-2xl space-y-3.5 min-h-[500px]">
-        {messages.map((msg, index) => {
-          const isLeft = msg.from === leftParticipant;
-
-          return (
-            <div key={index} className={`flex flex-col ${isLeft ? 'items-start' : 'items-end'}`}>
-              <span className="text-[10px] font-bold text-slate-400 mb-1 px-1">
-                {msg.from}
-              </span>
-
-              <div
-                className={`max-w-[85%] md:max-w-[75%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-md ${
-                  isLeft
-                    ? 'bg-slate-800 text-slate-100 rounded-tl-xs border border-slate-700/60'
-                    : 'bg-indigo-600 text-white rounded-tr-xs shadow-indigo-600/10'
-                }`}
-              >
-                <RenderFormattedText text={msg.text} />
-
-                {msg.date && (
-                  <span className={`block text-[9px] mt-1.5 text-right font-mono ${isLeft ? 'text-slate-400' : 'text-indigo-200'}`}>
-                    {typeof msg.date === 'string' ? msg.date : new Date(msg.date * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-</file>
-
-<file path="frontend/index.html">
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Wonderful</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
-</html>
-</file>
-
-<file path="backend/src/utils/uploadConfig.js">
-const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const cloudinary = require('../config/cloudinary');
-const path = require('path');
-const fs = require('fs');
-
-const tempDir = 'uploads/temp';
-if (!fs.existsSync(tempDir)) {
-  fs.mkdirSync(tempDir, { recursive: true });
-}
-
-// Storage Cloudinary per Copertine e File JSON
-const cloudinaryStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: async (req, file) => {
-    // Se è il file JSON della storia
-if (file.fieldname === 'jsonFile' || file.mimetype === 'application/json') {
-  return {
-    folder: 'quiz_stories_json',
-    resource_type: 'raw' // Rimosso format: 'json'
-  };
-}
-    // Altrimenti imposta come Immagine di Copertina
-    return {
-      folder: 'quiz_covers',
-      allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-      resource_type: 'image',
-    };
-  },
-});
-
-// Storage temporaneo su disco SOLO per i file Word (.docx)
-const diskStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, tempDir),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `${file.fieldname}-${uniqueSuffix}${path.extname(file.originalname)}`);
-  }
-});
-
-const customStorage = {
-  _handleFile(req, file, cb) {
-    if (file.fieldname === 'coverImage' || file.fieldname === 'jsonFile') {
-      cloudinaryStorage._handleFile(req, file, cb);
-    } else {
-      diskStorage._handleFile(req, file, cb);
-    }
-  },
-  _removeFile(req, file, cb) {
-    if (file.fieldname === 'coverImage' || file.fieldname === 'jsonFile') {
-      cloudinaryStorage._removeFile(req, file, cb);
-    } else {
-      diskStorage._removeFile(req, file, cb);
-    }
-  }
-};
-
-const upload = multer({ 
-  storage: customStorage,
-  limits: { fileSize: 100 * 1024 * 1024 }
-});
-
-module.exports = upload;
-</file>
-
-<file path="backend/package.json">
-{
-  "name": "anime-quiz-backend",
-  "version": "1.0.0",
-  "main": "src/app.js",
-  "scripts": {
-    "start": "node src/app.js",
-    "dev": "nodemon src/app.js",
-    "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio"
-  },
-  "dependencies": {
-    "@prisma/client": "^5.22.0",
-    "cloudinary": "^1.41.3",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "mammoth": "^1.12.1",
-    "multer": "^2.2.0",
-    "multer-storage-cloudinary": "^4.0.0",
-    "socket.io": "^4.8.3"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.14",
-    "prisma": "^5.22.0"
-  },
-  "description": "",
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
-}
-</file>
-
-<file path="frontend/src/App.jsx">
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-
-import Navbar from './components/Navbar';
-import CreateSectionModal from './components/CreateSectionModal';
-import CreateStoryModal from './components/CreateStoryModal';
-import Toast from './components/Toast';
-
-import Home from './pages/Home';
-import QuizAnime from './pages/QuizAnime';
-import SectionDetail from './pages/SectionDetail';
-import QuizPlay from './pages/QuizPlay';
-import StoriesList from './pages/StoriesList';
-import StoryDetail from './pages/StoryDetail';
-import GuessCharacter from './pages/GuessCharacter';
-import MultiplayerLobby from './pages/MultiplayerLobby';
-import MultiplayerPlay from './pages/MultiplayerPlay';
-
-export default function App() {
-  const [isAdmin, setIsAdmin] = useState(() => {
-    return localStorage.getItem('isAdmin') === 'true';
-  });
-  const [adminPasswordModal, setAdminPasswordModal] = useState(false);
-  const [passwordInput, setPasswordInput] = useState('');
-  
-  // Modali di creazione
-  const [isCreateSectionOpen, setIsCreateSectionOpen] = useState(false);
-  const [isCreateStoryOpen, setIsCreateStoryOpen] = useState(false);
-
-  // Stato fittizio/fetch per le sezioni
-  const [sections, setSections] = useState([]);
-  const [toast, setToast] = useState({ message: '', type: '' });
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  const showToast = (message, type = 'success') => {
-    setToast({ message, type });
-  };
-
-  const handleAdminToggle = () => {
-    if (isAdmin) {
-      setIsAdmin(false);
-      localStorage.removeItem('isAdmin');
-      localStorage.removeItem('adminPassword');
-      showToast('Modalità Admin disattivata', 'error');
-    } else {
-      setAdminPasswordModal(true);
-    }
-  };
-
-  const handleAdminLoginSubmit = (e) => {
-    e.preventDefault();
-    if (!passwordInput) return;
-
-    localStorage.setItem('adminPassword', passwordInput);
-    localStorage.setItem('isAdmin', 'true');
-    setIsAdmin(true);
-    setPasswordInput('');
-    setAdminPasswordModal(false);
-    showToast('Modalità Admin attivata!', 'success');
-  };
-
-  const handleDeleteSection = (id) => {
-    setSections((prev) => prev.filter((sec) => sec.id !== id));
-    showToast('Sezione eliminata', 'error');
-  };
-
-  const triggerRefresh = () => setRefreshTrigger((prev) => prev + 1);
-
-  return (
-    <Router>
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-        
-        <Navbar 
-          isAdmin={isAdmin}
-          onToggleAdmin={handleAdminToggle}
-          onOpenCreateSection={() => setIsCreateSectionOpen(true)}
-          onOpenCreateStory={() => setIsCreateStoryOpen(true)}
-        />
-
-        <main className="flex-1">
-          <Routes>
-            {/* Pagina Principale Hub */}
-            <Route path="/" element={<Home />} />
-
-            {/* Pagina Quiz Separata */}
-            <Route 
-              path="/quizzes" 
-              element={
-                <QuizAnime 
-                  sections={sections} 
-                  onDeleteSection={handleDeleteSection} 
-                  isAdmin={isAdmin} 
-                />
-              } 
-            />
-
-            <Route path="/section/:id" element={<SectionDetail isAdmin={isAdmin} />} />
-            <Route path="/quiz/:id" element={<QuizPlay />} />
-            <Route path="/stories" element={<StoriesList refreshTrigger={refreshTrigger} isAdmin={isAdmin} />} />
-            <Route path="/story/:id" element={<StoryDetail />} />
-            <Route path="/guess-character" element={<GuessCharacter />} />
-            <Route path="/multiplayer" element={<MultiplayerLobby />} />
-+ <Route path="/multiplayer-play" element={<MultiplayerPlay />} />          </Routes>
-        </main>
-
-        {/* Modal Password Admin */}
-        {adminPasswordModal && (
-          <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-              <h3 className="text-xl font-bold text-white mb-2">Accesso Amministratore</h3>
-              <p className="text-sm text-slate-400 mb-4">
-                Inserisci la password per sbloccare la creazione di quiz e storie.
-              </p>
-              <form onSubmit={handleAdminLoginSubmit} className="space-y-4">
-                <input
-                  type="password"
-                  placeholder="Password Admin..."
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-                  autoFocus
-                />
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setAdminPasswordModal(false)}
-                    className="px-4 py-2 text-sm text-slate-400 hover:text-white cursor-pointer"
-                  >
-                    Annulla
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold cursor-pointer"
-                  >
-                    Conferma
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Modale Creazione Sezione Quiz */}
-        <CreateSectionModal 
-          isOpen={isCreateSectionOpen}
-          onClose={() => setIsCreateSectionOpen(false)} 
-          onSuccess={() => {
-            setIsCreateSectionOpen(false);
-            triggerRefresh();
-            showToast('Sezione Quiz creata con successo!');
-          }} 
-        />
-
-        {/* Modale Creazione Racconto */}
-        <CreateStoryModal 
-          isOpen={isCreateStoryOpen}
-          onClose={() => setIsCreateStoryOpen(false)} 
-          onSuccess={() => {
-            setIsCreateStoryOpen(false);
-            triggerRefresh();
-            showToast('Racconto creato con successo!');
-          }} 
-        />
-
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
-          onClose={() => setToast({ message: '', type: '' })} 
-        />
-      </div>
-    </Router>
   );
 }
 </file>
@@ -8853,6 +8679,182 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server Node.js + WebSockets in esecuzione sulla porta ${PORT}`);
 });
+</file>
+
+<file path="frontend/src/App.jsx">
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+import Navbar from './components/Navbar';
+import CreateSectionModal from './components/CreateSectionModal';
+import CreateStoryModal from './components/CreateStoryModal';
+import Toast from './components/Toast';
+
+import Home from './pages/Home';
+import QuizAnime from './pages/QuizAnime';
+import SectionDetail from './pages/SectionDetail';
+import QuizPlay from './pages/QuizPlay';
+import StoriesList from './pages/StoriesList';
+import StoryDetail from './pages/StoryDetail';
+import GuessCharacter from './pages/GuessCharacter';
+import MultiplayerLobby from './pages/MultiplayerLobby';
+import MultiplayerPlay from './pages/MultiplayerPlay';
+
+export default function App() {
+  const [isAdmin, setIsAdmin] = useState(() => {
+    return localStorage.getItem('isAdmin') === 'true';
+  });
+  const [adminPasswordModal, setAdminPasswordModal] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  
+  // Modali di creazione
+  const [isCreateSectionOpen, setIsCreateSectionOpen] = useState(false);
+  const [isCreateStoryOpen, setIsCreateStoryOpen] = useState(false);
+
+  // Stato fittizio/fetch per le sezioni
+  const [sections, setSections] = useState([]);
+  const [toast, setToast] = useState({ message: '', type: '' });
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+  };
+
+  const handleAdminToggle = () => {
+    if (isAdmin) {
+      setIsAdmin(false);
+      localStorage.removeItem('isAdmin');
+      localStorage.removeItem('adminPassword');
+      showToast('Modalità Admin disattivata', 'error');
+    } else {
+      setAdminPasswordModal(true);
+    }
+  };
+
+  const handleAdminLoginSubmit = (e) => {
+    e.preventDefault();
+    if (!passwordInput) return;
+
+    localStorage.setItem('adminPassword', passwordInput);
+    localStorage.setItem('isAdmin', 'true');
+    setIsAdmin(true);
+    setPasswordInput('');
+    setAdminPasswordModal(false);
+    showToast('Modalità Admin attivata!', 'success');
+  };
+
+  const handleDeleteSection = (id) => {
+    setSections((prev) => prev.filter((sec) => sec.id !== id));
+    showToast('Sezione eliminata', 'error');
+  };
+
+  const triggerRefresh = () => setRefreshTrigger((prev) => prev + 1);
+
+  return (
+    <Router>
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+        
+        <Navbar 
+          isAdmin={isAdmin}
+          onToggleAdmin={handleAdminToggle}
+          onOpenCreateSection={() => setIsCreateSectionOpen(true)}
+          onOpenCreateStory={() => setIsCreateStoryOpen(true)}
+        />
+
+        <main className="flex-1">
+          <Routes>
+            {/* Pagina Principale Hub */}
+            <Route path="/" element={<Home />} />
+
+            {/* Pagina Quiz Separata */}
+            <Route 
+              path="/quizzes" 
+              element={
+                <QuizAnime 
+                  sections={sections} 
+                  onDeleteSection={handleDeleteSection} 
+                  isAdmin={isAdmin} 
+                />
+              } 
+            />
+
+            <Route path="/section/:id" element={<SectionDetail isAdmin={isAdmin} />} />
+            <Route path="/quiz/:id" element={<QuizPlay />} />
+            <Route path="/stories" element={<StoriesList refreshTrigger={refreshTrigger} isAdmin={isAdmin} />} />
+            <Route path="/story/:id" element={<StoryDetail />} />
+            <Route path="/guess-character" element={<GuessCharacter />} />
+            <Route path="/multiplayer" element={<MultiplayerLobby />} />
++ <Route path="/multiplayer-play" element={<MultiplayerPlay />} />          </Routes>
+        </main>
+
+        {/* Modal Password Admin */}
+        {adminPasswordModal && (
+          <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+              <h3 className="text-xl font-bold text-white mb-2">Accesso Amministratore</h3>
+              <p className="text-sm text-slate-400 mb-4">
+                Inserisci la password per sbloccare la creazione di quiz e storie.
+              </p>
+              <form onSubmit={handleAdminLoginSubmit} className="space-y-4">
+                <input
+                  type="password"
+                  placeholder="Password Admin..."
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  autoFocus
+                />
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAdminPasswordModal(false)}
+                    className="px-4 py-2 text-sm text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    Annulla
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold cursor-pointer"
+                  >
+                    Conferma
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modale Creazione Sezione Quiz */}
+        <CreateSectionModal 
+          isOpen={isCreateSectionOpen}
+          onClose={() => setIsCreateSectionOpen(false)} 
+          onSuccess={() => {
+            setIsCreateSectionOpen(false);
+            triggerRefresh();
+            showToast('Sezione Quiz creata con successo!');
+          }} 
+        />
+
+        {/* Modale Creazione Racconto */}
+        <CreateStoryModal 
+          isOpen={isCreateStoryOpen}
+          onClose={() => setIsCreateStoryOpen(false)} 
+          onSuccess={() => {
+            setIsCreateStoryOpen(false);
+            triggerRefresh();
+            showToast('Racconto creato con successo!');
+          }} 
+        />
+
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast({ message: '', type: '' })} 
+        />
+      </div>
+    </Router>
+  );
+}
 </file>
 
 <file path="frontend/src/components/Navbar.jsx">

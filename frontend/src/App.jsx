@@ -78,30 +78,35 @@ export default function App() {
         />
 
         <main className="flex-1">
-          <Routes>
-            {/* Pagina Principale Hub */}
-            <Route path="/" element={<Home />} />
+<Routes>
+  {/* Pagina Principale Hub */}
+  <Route path="/" element={<Home />} />
 
-            {/* Pagina Quiz Separata */}
-            <Route 
-              path="/quizzes" 
-              element={
-                <QuizAnime 
-                  sections={sections} 
-                  onDeleteSection={handleDeleteSection} 
-                  isAdmin={isAdmin} 
-                />
-              } 
-            />
-<Route path="/admin/section/:id" element={<SectionDetail />} isAdmin={isAdmin}/>
-            <Route path="/section/:id" element={<SectionDetail isAdmin={isAdmin} />} />
-            <Route path="/quiz/:id" element={<QuizPlay />} />
-            <Route path="/stories" element={<StoriesList refreshTrigger={refreshTrigger} isAdmin={isAdmin} />} />
-            <Route path="/story/:id" element={<StoryDetail />} />
-            <Route path="/guess-character" element={<GuessCharacter />} />
-            <Route path="/multiplayer" element={<MultiplayerLobby />} />
-+ <Route path="/multiplayer-play" element={<MultiplayerPlay />} />         
- </Routes>
+  {/* Pagina Quiz Separata */}
+  <Route 
+    path="/quizzes" 
+    element={
+      <QuizAnime 
+        sections={sections} 
+        onDeleteSection={handleDeleteSection} 
+        isAdmin={isAdmin} 
+      />
+    } 
+  />
+
+  {/* Rotte Admin e Dettagli Sezione */}
+  <Route path="/admin/stories" element={<StoriesList isAdmin={isAdmin} />} />
+  <Route path="/admin/section/:id" element={<SectionDetail isAdmin={isAdmin} />} />
+  <Route path="/section/:id" element={<SectionDetail isAdmin={isAdmin} />} />
+
+  {/* Altre Rotte */}
+  <Route path="/quiz/:id" element={<QuizPlay />} />
+  <Route path="/stories" element={<StoriesList refreshTrigger={refreshTrigger} isAdmin={isAdmin} />} />
+  <Route path="/story/:id" element={<StoryDetail />} />
+  <Route path="/guess-character" element={<GuessCharacter />} />
+  <Route path="/multiplayer" element={<MultiplayerLobby />} />
+  <Route path="/multiplayer-play" element={<MultiplayerPlay />} />
+</Routes>
         </main>
 
         {/* Modal Password Admin */}

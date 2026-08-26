@@ -100,7 +100,7 @@ export default function App() {
   <Route path="/section/:id" element={<SectionDetail isAdmin={isAdmin} />} />
 
   {/* Altre Rotte */}
-  <Route path="/quiz/:id" element={<QuizPlay />} />
+  <Route path="/play/:id" element={<QuizPlay />} />
   <Route path="/stories" element={<StoriesList refreshTrigger={refreshTrigger} isAdmin={isAdmin} />} />
   <Route path="/story/:id" element={<StoryDetail />} />
   <Route path="/guess-character" element={<GuessCharacter />} />

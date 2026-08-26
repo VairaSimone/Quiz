@@ -91,14 +91,14 @@ export default function SectionDetail() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-<Link to="/admin" className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 text-sm">
-  <ArrowLeft className="w-4 h-4" /> Torna al Pannello Admin
+<Link to="/quizzes" className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 text-sm">
+  <ArrowLeft className="w-4 h-4" /> Torna indietro
 </Link>
 
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-8 flex flex-col md:flex-row gap-6 items-center justify-between">
         <div className="flex items-center gap-5">
           <img 
-            src={section.coverImage ? `${SERVER_URL}${section.coverImage}` : 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600'} 
+            src={section.coverImage ? `${section.coverImage}` : 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600'} 
             alt={section.title}
             className="w-24 h-24 rounded-xl object-cover border border-slate-700" 
           />

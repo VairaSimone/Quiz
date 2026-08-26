@@ -93,7 +93,7 @@ export default function App() {
                 />
               } 
             />
-
+<Route path="/admin/section/:id" element={<SectionDetail />} isAdmin={isAdmin}/>
             <Route path="/section/:id" element={<SectionDetail isAdmin={isAdmin} />} />
             <Route path="/quiz/:id" element={<QuizPlay />} />
             <Route path="/stories" element={<StoriesList refreshTrigger={refreshTrigger} isAdmin={isAdmin} />} />

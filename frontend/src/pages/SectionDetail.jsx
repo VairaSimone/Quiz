@@ -106,19 +106,19 @@ export default function SectionDetail() {
             <h1 className="text-3xl font-extrabold text-white mb-1">{section.title}</h1>
             <p className="text-slate-400 text-sm">{section.description || 'Nessuna descrizione.'}</p>
             <div className="mt-3 flex items-center gap-4 text-xs font-semibold text-indigo-400">
-              <span>{section.questions.length} domande registrate</span>
+<span>{section.questions?.length || 0} domande registrate</span>
             </div>
           </div>
         </div>
 
-        <Link
-          to={`/play/${section.id}`}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition ${
-            section.questions.length > 0 
-              ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30' 
-              : 'bg-slate-800 text-slate-500 cursor-not-allowed pointer-events-none'
-          }`}
-        >
+    <Link
+  to={`/play/${section.id}`}
+  className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition ${
+    (section.questions?.length || 0) > 0 
+      ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30' 
+      : 'bg-slate-800 text-slate-500 cursor-not-allowed pointer-events-none'
+  }`}
+>
           <Play className="w-5 h-5 fill-current" />
           Avvia Quiz
         </Link>
@@ -190,8 +190,8 @@ export default function SectionDetail() {
         <div className="lg:col-span-2">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">Domande Presenti ({section.questions.length})</h2>
-              {section.questions.length > 0 && (
+<h2 className="text-xl font-bold text-white">Domande Presenti ({section.questions?.length || 0})</h2>
+{(section.questions?.length || 0) > 0 && (
                 <button
                   onClick={handleClearQuestions}
                   className="flex items-center gap-1 text-red-400 hover:text-red-300 text-xs font-semibold transition"
@@ -201,8 +201,8 @@ export default function SectionDetail() {
               )}
             </div>
 
-            {section.questions.length === 0 ? (
-              <div className="text-center py-12 text-slate-500 text-sm">
+{(!section.questions || section.questions.length === 0) ? (
+                <div className="text-center py-12 text-slate-500 text-sm">
                 Nessuna domanda caricata. Utilizza il pannello di sinistra per caricare un documento Word.
               </div>
             ) : (

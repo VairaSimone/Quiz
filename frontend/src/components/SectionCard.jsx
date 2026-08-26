@@ -5,7 +5,7 @@ import { SERVER_URL } from '../api/client';
 
 export default function SectionCard({ section, onDelete, isAdmin }) {
   const imageUrl = section.coverImage 
-    ? `${SERVER_URL}${section.coverImage}`
+    ? `${section.coverImage}`
     : 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=60';
 
   return (

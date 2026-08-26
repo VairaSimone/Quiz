@@ -80,13 +80,18 @@ exports.createSection = async (req, res) => {
 
 const coverImage = req.file ? req.file.path : null;
 
-    const newSection = await prisma.section.create({
-      data: {
-        title,
-        description,
-        coverImage
-      }
-    });
+const newSection = await prisma.section.create({
+  data: {
+    title,
+    description,
+    coverImage
+  },
+  include: {
+    _count: {
+      select: { questions: true }
+    }
+  }
+});
 
     res.status(201).json({ success: true, data: newSection });
   } catch (error) {

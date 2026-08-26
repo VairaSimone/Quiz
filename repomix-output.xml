@@ -455,6 +455,7 @@ frontend/
   .oxlintrc.json
   index.html
   package.json
+  vercel.json
   vite.config.js
 .gitignore
 </directory_structure>
@@ -1090,99 +1091,6 @@ export default function Toast({ message, type = 'error', onClose }) {
 }
 </file>
 
-<file path="frontend/src/pages/QuizAnime.jsx">
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { BookOpen, Trash2, Award, Layers, ArrowRight } from 'lucide-react';
-
-export default function QuizAnime({ sections, onDeleteSection, isAdmin }) {
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 pb-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
-        
-        {/* Intestazione Sezione */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
-              <Layers className="w-6 h-6 text-indigo-400" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white tracking-wide">Quiz Anime</h1>
-              <p className="text-xs text-slate-400">Scegli una categoria e inizia il test</p>
-            </div>
-          </div>
-          
-          <span className="text-xs font-medium text-slate-400 bg-slate-900 border border-slate-800 px-3.5 py-2 rounded-xl">
-            Sezioni totali: <strong className="text-indigo-400 font-bold">{sections?.length || 0}</strong>
-          </span>
-        </div>
-
-        {/* Griglia Sezioni Quiz */}
-        {!sections || sections.length === 0 ? (
-          <div className="text-center py-16 bg-slate-900/40 border border-dashed border-slate-800 rounded-3xl backdrop-blur-sm">
-            <BookOpen className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-            <h3 className="text-base font-semibold text-slate-300">Nessuna sezione quiz trovata</h3>
-            <p className="text-xs text-slate-500 max-w-xs mx-auto mt-1">
-              Accedi come Admin per aggiungere la prima sezione con file Word (.docx).
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sections.map((section) => (
-              <div
-                key={section.id}
-                className="group relative bg-slate-900/60 backdrop-blur-md border border-slate-800/80 hover:border-indigo-500/40 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 flex flex-col justify-between overflow-hidden"
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-3 mb-4">
-                    <span className="px-3 py-1 rounded-lg text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                      {section.category || 'Anime General'}
-                    </span>
-
-                    {isAdmin && (
-                      <button
-                        onClick={() => onDeleteSection(section.id)}
-                        className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
-                        title="Elimina Sezione"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-
-                  <h3 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors mb-2 line-clamp-1">
-                    {section.title}
-                  </h3>
-                  <p className="text-slate-400 text-xs leading-relaxed line-clamp-2 mb-6">
-                    {section.description || 'Nessuna descrizione disponibile per questa sezione.'}
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-slate-800/60 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-                    <Award className="w-4 h-4 text-amber-400" />
-                    <span>{section.questions_count || 0} Domande</span>
-                  </div>
-
-                  <Link
-                    to={`/section/${section.id}`}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-600/20 group-hover:shadow-indigo-500/30 transition-all cursor-pointer"
-                  >
-                    <span>Esplora</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-      </div>
-    </div>
-  );
-}
-</file>
-
 <file path="frontend/src/App.css">
 .counter {
   font-size: 16px;
@@ -1412,6 +1320,14 @@ export default {
     "react/rules-of-hooks": "error",
     "react/only-export-components": ["warn", { "allowConstantExport": true }]
   }
+}
+</file>
+
+<file path="frontend/vercel.json">
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
 </file>
 
@@ -6177,250 +6093,83 @@ await API.post('/stories', formData);
 }
 </file>
 
-<file path="frontend/src/components/EditQuestionModal.jsx">
+<file path="frontend/src/pages/QuizAnime.jsx">
 import React, { useState, useEffect } from 'react';
-import { X, Save } from 'lucide-react';
 import API from '../api/client';
-import Toast from './Toast';
+import SectionCard from '../components/SectionCard';
+import { Sparkles, Library, ShieldCheck } from 'lucide-react';
 
-export default function EditQuestionModal({ isOpen, onClose, question, onQuestionUpdated }) {
-  const [questionText, setQuestionText] = useState('');
-  const [correctAnswer, setCorrectAnswer] = useState('');
-  const [level, setLevel] = useState('MEDIO');
-  const [type, setType] = useState('MULTIPLE_CHOICE');
-  const [options, setOptions] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState(null);
+export default function QuizAnime({ refreshTrigger, isAdmin }) {
+  const [sections, setSections] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (question) {
-      setQuestionText(question.questionText || '');
-      setCorrectAnswer(question.correctAnswer || '');
-      setLevel(question.level || 'MEDIO');
-      setType(question.type || 'MULTIPLE_CHOICE');
-      setOptions(question.options?.map(o => o.text) || []);
-    }
-  }, [question]);
-
-  if (!isOpen || !question) return null;
-
-  const handleOptionChange = (index, value) => {
-    const updated = [...options];
-    updated[index] = value;
-    setOptions(updated);
-  };
-
-  const addOption = () => setOptions([...options, '']);
-  const removeOption = (index) => setOptions(options.filter((_, i) => i !== index));
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const fetchSections = async () => {
     try {
       setLoading(true);
-      await API.put(`/quiz/questions/${question.id}`, {
-        questionText,
-        correctAnswer,
-        level,
-        type,
-        options: type === 'MULTIPLE_CHOICE' ? options.filter(o => o.trim() !== '') : []
-      });
-      onQuestionUpdated();
-      onClose();
+      const response = await API.get('/sections');
+      setSections(response.data.data);
     } catch (err) {
-      setToast({ message: err.response?.data?.message || 'Errore durante la modifica della domanda', type: 'error' });
+      console.error('Errore nel caricamento delle sezioni:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <>
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 relative text-white max-h-[90vh] overflow-y-auto">
-          <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white">
-            <X className="w-6 h-6" />
-          </button>
+  useEffect(() => {
+    fetchSections();
+  }, [refreshTrigger]);
 
-          <h2 className="text-xl font-bold mb-4">Modifica Domanda</h2>
+  const handleDeleteSection = async (id) => {
+    if (!window.confirm('Sei sicuro di voler eliminare questa sezione e tutte le sue domande?')) return;
+    try {
+      await API.delete(`/sections/${id}`);
+      setSections(sections.filter(s => s.id !== id));
+    } catch (err) {
+      alert('Errore durante la cancellazione della sezione');
+    }
+  };
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">Testo Domanda</label>
-              <textarea
-                required
-                rows={3}
-                value={questionText}
-                onChange={(e) => setQuestionText(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Livello</label>
-                <select
-                  value={level}
-                  onChange={(e) => setLevel(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none"
-                >
-                  <option value="FACILE">FACILE</option>
-                  <option value="MEDIO">MEDIO</option>
-                  <option value="DIFFICILE">DIFFICILE</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Tipologia</label>
-                <select
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none"
-                >
-                  <option value="MULTIPLE_CHOICE">Risposta Multipla</option>
-                  <option value="SHORT_ANSWER">Risposta Aperta</option>
-                  <option value="BOOLEAN">Vero / Falso</option>
-                  <option value="WHO_SAID">Chi l'ha detto?</option>
-                </select>
-              </div>
-            </div>
-
-            {type === 'MULTIPLE_CHOICE' && (
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs font-semibold text-slate-400">Opzioni di Risposta</label>
-                  <button type="button" onClick={addOption} className="text-xs text-indigo-400 hover:underline">+ Aggiungi</button>
-                </div>
-                <div className="space-y-2">
-                  {options.map((opt, idx) => (
-                    <div key={idx} className="flex gap-2 items-center">
-                      <input
-                        type="text"
-                        value={opt}
-                        onChange={(e) => handleOptionChange(idx, e.target.value)}
-                        className="flex-grow bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white"
-                      />
-                      <button type="button" onClick={() => removeOption(idx)} className="text-red-400 text-xs hover:text-red-300">Rimuovi</button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1">Risposta Corretta</label>
-              <input
-                type="text"
-                required
-                value={correctAnswer}
-                onChange={(e) => setCorrectAnswer(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-emerald-400 font-medium"
-              />
-            </div>
-
-            <div className="pt-4 flex justify-end gap-3">
-              <button type="button" onClick={onClose} className="px-4 py-2 text-slate-400 hover:text-white text-sm">Annulla</button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg text-sm font-semibold transition disabled:opacity-50 cursor-pointer"
-              >
-                <Save className="w-4 h-4" />
-                {loading ? 'Salvataggio...' : 'Salva Modifiche'}
-              </button>
-            </div>
-          </form>
-        </div>
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64 text-indigo-400">
+        <Sparkles className="w-8 h-8 animate-spin" />
+        <span className="ml-2 font-medium">Caricamento Quiz Wonderful...</span>
       </div>
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-    </>
-  );
-}
-</file>
-
-<file path="frontend/src/components/SectionCard.jsx">
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Play, FileText, Trash2, Settings } from 'lucide-react';
-import { SERVER_URL } from '../api/client';
-
-export default function SectionCard({ section, onDelete, isAdmin }) {
-
-    const imageUrl = (path) => {
-  if (!path) return 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=60';
-  return path.startsWith('http') ? path : `${SERVER_URL}${path}`;
-};
+    );
+  }
 
   return (
-    <div className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700 hover:border-slate-600 transition flex flex-col shadow-lg">
-      <div className="relative h-48 w-full overflow-hidden group">
-<img 
-  src={imageUrl(section.coverImage)} 
-  alt={section.title}
-  className="w-full h-full object-cover group-hover:scale-105 transition duration-300" 
-/>
-        {isAdmin && (
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              onDelete(section.id);
-            }}
-            className="absolute top-2 right-2 bg-red-600/80 hover:bg-red-600 text-white p-2 rounded-full transition opacity-0 group-hover:opacity-100 cursor-pointer"
-            title="Elimina sezione"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        )}
-      </div>
-
-      <div className="p-5 flex flex-col flex-grow">
-        <h3 className="text-xl font-bold text-white mb-1">{section.title}</h3>
-        <p className="text-slate-400 text-sm mb-4 line-clamp-2">
-          {section.description || 'Nessuna descrizione.'}
-        </p>
-
-        <div className="mt-auto pt-4 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400 mb-4">
-          <span className="flex items-center gap-1 font-semibold text-indigo-400">
-            <FileText className="w-4 h-4" />
-            {section._count?.questions || 0} Domande
-          </span>
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="flex items-center gap-3 mb-8">
+        <Library className="w-8 h-8 text-indigo-400" />
+        <div>
+          <h1 className="text-3xl font-extrabold text-white flex items-center gap-2">
+            {isAdmin ? 'Pannello Amministrazione' : 'Scegli un Quiz Anime'}
+          </h1>
+          <p className="text-slate-400 text-sm">
+            {isAdmin 
+              ? 'Gestisci sezioni, carica file Word e modifica domande.' 
+              : 'Seleziona il tuo anime preferito e metti alla prova la tua conoscenza!'}
+          </p>
         </div>
-
-        {/* Pulsanti differenziati tra Utente Normale e Admin */}
-        {isAdmin ? (
-          <div className="grid grid-cols-2 gap-2">
-            <Link
-              to={`/admin/section/${section.id}`}
-              className="flex items-center justify-center gap-1 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium py-2 rounded-lg transition"
-            >
-              <Settings className="w-4 h-4" />
-              Gestisci
-            </Link>
-            <Link
-              to={`/play/${section.id}`}
-              className={`flex items-center justify-center gap-1 text-sm font-medium py-2 rounded-lg transition ${
-                (section._count?.questions || 0) > 0
-                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
-                  : 'bg-slate-700 text-slate-500 cursor-not-allowed pointer-events-none'
-              }`}
-            >
-              <Play className="w-4 h-4" />
-              Gioca
-            </Link>
-          </div>
-        ) : (
-          <Link
-            to={`/play/${section.id}`}
-            className={`w-full flex items-center justify-center gap-2 text-sm font-bold py-2.5 rounded-lg transition ${
-              (section._count?.questions || 0) > 0
-                ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20'
-                : 'bg-slate-700 text-slate-500 cursor-not-allowed pointer-events-none'
-            }`}
-          >
-            <Play className="w-4 h-4 fill-current" />
-            Gioca Ora
-          </Link>
-        )}
       </div>
+
+      {sections.length === 0 ? (
+        <div className="bg-slate-900 border border-dashed border-slate-800 rounded-2xl p-12 text-center text-slate-400">
+          <p className="text-lg mb-2">Nessuna sezione anime creata finora.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {sections.map(section => (
+            <SectionCard 
+              key={section.id} 
+              section={section} 
+              onDelete={handleDeleteSection} 
+              isAdmin={isAdmin}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -6774,294 +6523,6 @@ export default function QuizPlay() {
 }
 </file>
 
-<file path="frontend/src/pages/SectionDetail.jsx">
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import API, { SERVER_URL } from '../api/client';
-import EditQuestionModal from '../components/EditQuestionModal';
-import { Upload, FileText, Play, Trash2, ArrowLeft, Trophy, CheckCircle, Edit3 } from 'lucide-react';
-
-export default function SectionDetail() {
-  const { id } = useParams();
-  const [section, setSection] = useState(null);
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [file, setFile] = useState(null);
-  const [uploadStatus, setUploadStatus] = useState(null);
-  const [editingQuestion, setEditingQuestion] = useState(null);
-const getImageUrl = (path) => {
-  if (!path) return 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=60';
-  return path.startsWith('http') ? path : `${SERVER_URL}${path}`;
-};
-const fetchSectionData = async () => {
-    try {
-      setLoading(true);
-      const [resSection, resLeaderboard] = await Promise.all([
-        API.get(`/sections/${id}`),
-        API.get(`/quiz/sections/${id}/leaderboard`)
-      ]);
-
-      const rawData = resSection.data.data;
-      const sectionData = Array.isArray(rawData) ? rawData[0] : rawData;
-
-      if (sectionData) {
-        setSection({
-          ...sectionData,
-          questions: sectionData.questions || []
-        });
-      }
-
-      setLeaderboard(resLeaderboard.data.data || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-useEffect(() => {
-    fetchSectionData();
-  }, [id]);
-  const handleFileChange = (e) => {
-    const selected = e.target.files[0];
-    if (selected && selected.name.endsWith('.docx')) {
-      setFile(selected);
-      setUploadStatus(null);
-    } else {
-      alert('Seleziona un file valido con estensione .docx');
-    }
-  };
-
-  const handleUpload = async (e) => {
-    e.preventDefault();
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('docxFile', file);
-
-    try {
-      setUploading(true);
-      const res = await API.post(`/quiz/sections/${id}/upload-docx`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      setUploadStatus(`Successo! Importate ${res.data.count} domande.`);
-      setFile(null);
-      fetchSectionData();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Errore nell\'upload del file');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleDeleteSingleQuestion = async (qId) => {
-    if (!window.confirm('Eliminare questa specifica domanda?')) return;
-    try {
-      await API.delete(`/quiz/questions/${qId}`);
-      fetchSectionData();
-    } catch (err) {
-      alert('Errore durante l\'eliminazione della domanda');
-    }
-  };
-
-  const handleClearQuestions = async () => {
-    if (!window.confirm('Vuoi rimuovere TUTTE le domande salvate per questa sezione?')) return;
-    try {
-      await API.delete(`/quiz/sections/${id}/questions`);
-      fetchSectionData();
-    } catch (err) {
-      alert('Errore nello svuotamento delle domande');
-    }
-  };
-
-  if (loading) return <div className="text-center py-20 text-slate-400">Caricamento in corso...</div>;
-  if (!section) return <div className="text-center py-20 text-red-400">Sezione non trovata!</div>;
-
-  return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-<Link to="/admin" className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 text-sm">
-  <ArrowLeft className="w-4 h-4" /> Torna al Pannello Admin
-</Link>
-
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-8 flex flex-col md:flex-row gap-6 items-center justify-between">
-        <div className="flex items-center gap-5">
-<img 
-  src={getImageUrl(section.coverImage)} 
-  alt={section.title}
-  className="w-24 h-24 rounded-xl object-cover border border-slate-700" 
-/>
-          <div>
-            <h1 className="text-3xl font-extrabold text-white mb-1">{section.title}</h1>
-            <p className="text-slate-400 text-sm">{section.description || 'Nessuna descrizione.'}</p>
-            <div className="mt-3 flex items-center gap-4 text-xs font-semibold text-indigo-400">
-              <span>{section.questions.length} domande registrate</span>
-            </div>
-          </div>
-        </div>
-
-        <Link
-          to={`/play/${section.id}`}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition ${
-            section.questions.length > 0 
-              ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30' 
-              : 'bg-slate-800 text-slate-500 cursor-not-allowed pointer-events-none'
-          }`}
-        >
-          <Play className="w-5 h-5 fill-current" />
-          Avvia Quiz
-        </Link>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Modulo Upload + Classifica */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <Upload className="w-5 h-5 text-indigo-400" />
-              Carica file Word (.docx)
-            </h2>
-
-            <form onSubmit={handleUpload} className="space-y-4">
-              <div className="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-6 text-center cursor-pointer transition">
-                <input type="file" accept=".docx" onChange={handleFileChange} id="docxInput" className="hidden" />
-                <label htmlFor="docxInput" className="cursor-pointer block">
-                  <FileText className="w-10 h-10 text-slate-500 mx-auto mb-2" />
-                  <span className="text-sm font-medium text-slate-300 block">
-                    {file ? file.name : 'Seleziona un file Word'}
-                  </span>
-                  <span className="text-xs text-slate-500 block mt-1">Formato .docx supportato</span>
-                </label>
-              </div>
-
-              {uploadStatus && (
-                <div className="p-3 bg-emerald-950/50 border border-emerald-800 rounded-lg text-emerald-400 text-xs flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 shrink-0" />
-                  {uploadStatus}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={!file || uploading}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white py-2.5 rounded-lg font-semibold transition text-sm cursor-pointer"
-              >
-                {uploading ? 'Parsing in corso...' : 'Importa Domande'}
-              </button>
-            </form>
-          </div>
-
-          {/* Leaderboard Migliori Punteggi */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-            <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-amber-400" />
-              Classifica High Scores
-            </h3>
-            {leaderboard.length === 0 ? (
-              <p className="text-xs text-slate-500">Nessuna partita registrata.</p>
-            ) : (
-              <div className="space-y-2">
-                {leaderboard.map((res, rank) => (
-                  <div key={res.id} className="flex justify-between items-center bg-slate-800/50 px-3 py-2 rounded-lg text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-amber-400">#{rank + 1}</span>
-                      <span className="text-slate-300">{new Date(res.playedAt).toLocaleDateString()}</span>
-                    </div>
-                    <span className="font-bold text-indigo-400">{res.score} / {res.totalQuestions} pt</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Lista Domande con Modifica ed Eliminazione Singola */}
-        <div className="lg:col-span-2">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">Domande Presenti ({section.questions.length})</h2>
-              {section.questions.length > 0 && (
-                <button
-                  onClick={handleClearQuestions}
-                  className="flex items-center gap-1 text-red-400 hover:text-red-300 text-xs font-semibold transition"
-                >
-                  <Trash2 className="w-4 h-4" /> Svuota tutto
-                </button>
-              )}
-            </div>
-
-            {section.questions.length === 0 ? (
-              <div className="text-center py-12 text-slate-500 text-sm">
-                Nessuna domanda caricata. Utilizza il pannello di sinistra per caricare un documento Word.
-              </div>
-            ) : (
-              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-                {section.questions.map((q, idx) => (
-                  <div key={q.id} className="bg-slate-800/60 border border-slate-800 rounded-xl p-4 relative group">
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="text-xs font-bold text-indigo-400">Domanda {idx + 1}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="bg-slate-700 text-slate-300 text-[10px] px-2 py-0.5 rounded font-mono">
-                          {q.type}
-                        </span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
-                          q.level === 'FACILE' ? 'bg-emerald-950 text-emerald-400' :
-                          q.level === 'MEDIO' ? 'bg-amber-950 text-amber-400' : 'bg-rose-950 text-rose-400'
-                        }`}>
-                          {q.level}
-                        </span>
-                        
-                        {/* Azioni Modifica e Cancella */}
-                        <button
-                          onClick={() => setEditingQuestion(q)}
-                          className="text-slate-400 hover:text-indigo-400 p-1"
-                          title="Modifica Domanda"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteSingleQuestion(q.id)}
-                          className="text-slate-400 hover:text-red-400 p-1"
-                          title="Elimina Domanda"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <p className="text-white text-sm font-medium mb-3">{q.questionText}</p>
-
-                    {q.options?.length > 0 && (
-                      <div className="grid grid-cols-2 gap-2 mb-3">
-                        {q.options.map(opt => (
-                          <div key={opt.id} className="bg-slate-900/50 px-2.5 py-1.5 rounded text-xs text-slate-300 border border-slate-800">
-                            {opt.text}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="text-xs text-emerald-400 font-semibold bg-emerald-950/30 px-3 py-1.5 rounded border border-emerald-900/40">
-                      Risposta corretta: {q.correctAnswer}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <EditQuestionModal
-        isOpen={!!editingQuestion}
-        onClose={() => setEditingQuestion(null)}
-        question={editingQuestion}
-        onQuestionUpdated={fetchSectionData}
-      />
-    </div>
-  );
-}
-</file>
-
 <file path="frontend/src/pages/StoryDetail.jsx">
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
@@ -7317,150 +6778,242 @@ module.exports = upload;
 }
 </file>
 
-<file path="frontend/src/components/CreateSectionModal.jsx">
-import React, { useState } from 'react';
-import { X, UploadCloud, CheckCircle2 } from 'lucide-react';
+<file path="frontend/src/components/EditQuestionModal.jsx">
+import React, { useState, useEffect } from 'react';
+import { X, Save } from 'lucide-react';
+import API from '../api/client';
 
-export default function CreateSectionModal({ isOpen, onClose, onSuccess }) {
-  const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('');
-  const [description, setDescription] = useState('');
-  const [wordFile, setWordFile] = useState(null);
+export default function EditQuestionModal({ isOpen, onClose, question, onQuestionUpdated }) {
+  const [questionText, setQuestionText] = useState('');
+  const [correctAnswer, setCorrectAnswer] = useState('');
+  const [level, setLevel] = useState('MEDIO');
+  const [type, setType] = useState('MULTIPLE_CHOICE');
+  const [options, setOptions] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (question) {
+      setQuestionText(question.questionText || '');
+      setCorrectAnswer(question.correctAnswer || '');
+      setLevel(question.level || 'MEDIO');
+      setType(question.type || 'MULTIPLE_CHOICE');
+      setOptions(question.options?.map(o => o.text) || []);
+    }
+  }, [question]);
 
-  const handleSubmit = (e) => {
+  if (!isOpen || !question) return null;
+
+  const handleOptionChange = (index, value) => {
+    const updated = [...options];
+    updated[index] = value;
+    setOptions(updated);
+  };
+
+  const addOption = () => setOptions([...options, '']);
+  const removeOption = (index) => setOptions(options.filter((_, i) => i !== index));
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Esegui la logica di invio o chiamata API qui...
-    
-    // Reset dello stato locale
-    setTitle('');
-    setCategory('');
-    setDescription('');
-    setWordFile(null);
-
-    if (onSuccess) onSuccess();
+    try {
+      setLoading(true);
+      await API.put(`/quiz/questions/${question.id}`, {
+        questionText,
+        correctAnswer,
+        level,
+        type,
+        options: type === 'MULTIPLE_CHOICE' ? options.filter(o => o.trim() !== '') : []
+      });
+      onQuestionUpdated();
+      onClose();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Errore durante la modifica della domanda');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden relative">
-        
-        {/* Glow Decorativo top */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 relative text-white max-h-[90vh] overflow-y-auto">
+        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+          <X className="w-6 h-6" />
+        </button>
 
-        {/* Modal Header */}
-        <div className="px-6 pt-6 pb-4 flex items-center justify-between border-b border-slate-800/60">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
-            Crea Nuova Sezione Quiz
-          </h3>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+        <h2 className="text-xl font-bold mb-4">Modifica Domanda</h2>
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          
-          {/* Input Titolo */}
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Titolo Sezione
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="es. Naruto Shippuden - Arca Akatsuki"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-800/80 border border-slate-700/80 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-sm text-white placeholder-slate-500 transition focus:outline-none"
-            />
-          </div>
-
-          {/* Input Categoria */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Categoria / Genere
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="es. Shonen, Seinen, Isekai..."
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-800/80 border border-slate-700/80 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-sm text-white placeholder-slate-500 transition focus:outline-none"
-            />
-          </div>
-
-          {/* Input Descrizione */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Descrizione
-            </label>
+            <label className="block text-xs font-semibold text-slate-400 mb-1">Testo Domanda</label>
             <textarea
+              required
               rows={3}
-              placeholder="Breve introduzione al contenuto del quiz..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-800/80 border border-slate-700/80 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-sm text-white placeholder-slate-500 transition focus:outline-none resize-none"
+              value={questionText}
+              onChange={(e) => setQuestionText(e.target.value)}
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
             />
           </div>
 
-          {/* Area File Upload Word (.docx) */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-              Documento Domande (.docx)
-            </label>
-            <label className={`border-2 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center cursor-pointer transition ${
-              wordFile 
-                ? 'border-emerald-500/50 bg-emerald-500/5' 
-                : 'border-slate-700 hover:border-indigo-500/50 bg-slate-800/40 hover:bg-slate-800/80'
-            }`}>
-              <input
-                type="file"
-                accept=".docx"
-                onChange={(e) => setWordFile(e.target.files[0])}
-                className="hidden"
-              />
-              {wordFile ? (
-                <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold">
-                  <CheckCircle2 className="w-5 h-5 shrink-0" />
-                  <span className="truncate max-w-[240px]">{wordFile.name}</span>
-                </div>
-              ) : (
-                <div className="text-center">
-                  <UploadCloud className="w-7 h-7 text-indigo-400 mx-auto mb-1.5" />
-                  <p className="text-xs font-medium text-slate-300">
-                    Clicca per caricare il file Word
-                  </p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">Formato accetto: .docx</p>
-                </div>
-              )}
-            </label>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 mb-1">Livello</label>
+              <select
+                value={level}
+                onChange={(e) => setLevel(e.target.value)}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none"
+              >
+                <option value="FACILE">FACILE</option>
+                <option value="MEDIO">MEDIO</option>
+                <option value="DIFFICILE">DIFFICILE</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 mb-1">Tipologia</label>
+              <select
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none"
+              >
+                <option value="MULTIPLE_CHOICE">Risposta Multipla</option>
+                <option value="SHORT_ANSWER">Risposta Aperta</option>
+                <option value="BOOLEAN">Vero / Falso</option>
+                <option value="WHO_SAID">Chi l'ha detto?</option>
+              </select>
+            </div>
           </div>
 
-          {/* Modal Footer */}
-          <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-800/60">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2.5 text-xs font-semibold text-slate-400 hover:text-white transition cursor-pointer"
-            >
-              Annulla
-            </button>
+          {type === 'MULTIPLE_CHOICE' && (
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <label className="text-xs font-semibold text-slate-400">Opzioni di Risposta</label>
+                <button type="button" onClick={addOption} className="text-xs text-indigo-400 hover:underline">+ Aggiungi</button>
+              </div>
+              <div className="space-y-2">
+                {options.map((opt, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={opt}
+                      onChange={(e) => handleOptionChange(idx, e.target.value)}
+                      className="flex-grow bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white"
+                    />
+                    <button type="button" onClick={() => removeOption(idx)} className="text-red-400 text-xs hover:text-red-300">Rimuovi</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 mb-1">Risposta Corretta</label>
+            <input
+              type="text"
+              required
+              value={correctAnswer}
+              onChange={(e) => setCorrectAnswer(e.target.value)}
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-emerald-400 font-medium"
+            />
+          </div>
+
+          <div className="pt-4 flex justify-end gap-3">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-slate-400 hover:text-white text-sm">Annulla</button>
             <button
               type="submit"
-              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-indigo-600/20 transition cursor-pointer"
+              disabled={loading}
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg text-sm font-semibold transition disabled:opacity-50"
             >
-              Crea Sezione
+              <Save className="w-4 h-4" />
+              {loading ? 'Salvataggio...' : 'Salva Modifiche'}
             </button>
           </div>
-
         </form>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="frontend/src/components/SectionCard.jsx">
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Play, FileText, Trash2, Settings } from 'lucide-react';
+import { SERVER_URL } from '../api/client';
+
+export default function SectionCard({ section, onDelete, isAdmin }) {
+  const imageUrl = section.coverImage 
+    ? `${SERVER_URL}${section.coverImage}`
+    : 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=60';
+
+  return (
+    <div className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700 hover:border-slate-600 transition flex flex-col shadow-lg">
+      <div className="relative h-48 w-full overflow-hidden group">
+        <img 
+          src={imageUrl} 
+          alt={section.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition duration-300" 
+        />
+        {isAdmin && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              onDelete(section.id);
+            }}
+            className="absolute top-2 right-2 bg-red-600/80 hover:bg-red-600 text-white p-2 rounded-full transition opacity-0 group-hover:opacity-100 cursor-pointer"
+            title="Elimina sezione"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      <div className="p-5 flex flex-col flex-grow">
+        <h3 className="text-xl font-bold text-white mb-1">{section.title}</h3>
+        <p className="text-slate-400 text-sm mb-4 line-clamp-2">
+          {section.description || 'Nessuna descrizione.'}
+        </p>
+
+        <div className="mt-auto pt-4 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400 mb-4">
+          <span className="flex items-center gap-1 font-semibold text-indigo-400">
+            <FileText className="w-4 h-4" />
+            {section._count?.questions || 0} Domande
+          </span>
+        </div>
+
+        {/* Pulsanti differenziati tra Utente Normale e Admin */}
+        {isAdmin ? (
+          <div className="grid grid-cols-2 gap-2">
+            <Link
+              to={`/admin/section/${section.id}`}
+              className="flex items-center justify-center gap-1 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium py-2 rounded-lg transition"
+            >
+              <Settings className="w-4 h-4" />
+              Gestisci
+            </Link>
+            <Link
+              to={`/play/${section.id}`}
+              className={`flex items-center justify-center gap-1 text-sm font-medium py-2 rounded-lg transition ${
+                (section._count?.questions || 0) > 0
+                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                  : 'bg-slate-700 text-slate-500 cursor-not-allowed pointer-events-none'
+              }`}
+            >
+              <Play className="w-4 h-4" />
+              Gioca
+            </Link>
+          </div>
+        ) : (
+          <Link
+            to={`/play/${section.id}`}
+            className={`w-full flex items-center justify-center gap-2 text-sm font-bold py-2.5 rounded-lg transition ${
+              (section._count?.questions || 0) > 0
+                ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20'
+                : 'bg-slate-700 text-slate-500 cursor-not-allowed pointer-events-none'
+            }`}
+          >
+            <Play className="w-4 h-4 fill-current" />
+            Gioca Ora
+          </Link>
+        )}
       </div>
     </div>
   );
@@ -7613,6 +7166,283 @@ export default function Home() {
         </div>
 
       </div>
+    </div>
+  );
+}
+</file>
+
+<file path="frontend/src/pages/SectionDetail.jsx">
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import API, { SERVER_URL } from '../api/client';
+import EditQuestionModal from '../components/EditQuestionModal';
+import { Upload, FileText, Play, Trash2, ArrowLeft, Trophy, CheckCircle, Edit3 } from 'lucide-react';
+
+export default function SectionDetail() {
+  const { id } = useParams();
+  const [section, setSection] = useState(null);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [file, setFile] = useState(null);
+  const [uploadStatus, setUploadStatus] = useState(null);
+  const [editingQuestion, setEditingQuestion] = useState(null);
+
+  const fetchSectionData = async () => {
+    try {
+      setLoading(true);
+      const [resSection, resLeaderboard] = await Promise.all([
+        API.get(`/sections/${id}`),
+        API.get(`/quiz/sections/${id}/leaderboard`)
+      ]);
+      setSection(resSection.data.data);
+      setLeaderboard(resLeaderboard.data.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSectionData();
+  }, [id]);
+
+  const handleFileChange = (e) => {
+    const selected = e.target.files[0];
+    if (selected && selected.name.endsWith('.docx')) {
+      setFile(selected);
+      setUploadStatus(null);
+    } else {
+      alert('Seleziona un file valido con estensione .docx');
+    }
+  };
+
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('docxFile', file);
+
+    try {
+      setUploading(true);
+      const res = await API.post(`/quiz/sections/${id}/upload-docx`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setUploadStatus(`Successo! Importate ${res.data.count} domande.`);
+      setFile(null);
+      fetchSectionData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Errore nell\'upload del file');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteSingleQuestion = async (qId) => {
+    if (!window.confirm('Eliminare questa specifica domanda?')) return;
+    try {
+      await API.delete(`/quiz/questions/${qId}`);
+      fetchSectionData();
+    } catch (err) {
+      alert('Errore durante l\'eliminazione della domanda');
+    }
+  };
+
+  const handleClearQuestions = async () => {
+    if (!window.confirm('Vuoi rimuovere TUTTE le domande salvate per questa sezione?')) return;
+    try {
+      await API.delete(`/quiz/sections/${id}/questions`);
+      fetchSectionData();
+    } catch (err) {
+      alert('Errore nello svuotamento delle domande');
+    }
+  };
+
+  if (loading) return <div className="text-center py-20 text-slate-400">Caricamento in corso...</div>;
+  if (!section) return <div className="text-center py-20 text-red-400">Sezione non trovata!</div>;
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-8">
+<Link to="/admin" className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 text-sm">
+  <ArrowLeft className="w-4 h-4" /> Torna al Pannello Admin
+</Link>
+
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-8 flex flex-col md:flex-row gap-6 items-center justify-between">
+        <div className="flex items-center gap-5">
+          <img 
+            src={section.coverImage ? `${SERVER_URL}${section.coverImage}` : 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600'} 
+            alt={section.title}
+            className="w-24 h-24 rounded-xl object-cover border border-slate-700" 
+          />
+          <div>
+            <h1 className="text-3xl font-extrabold text-white mb-1">{section.title}</h1>
+            <p className="text-slate-400 text-sm">{section.description || 'Nessuna descrizione.'}</p>
+            <div className="mt-3 flex items-center gap-4 text-xs font-semibold text-indigo-400">
+              <span>{section.questions.length} domande registrate</span>
+            </div>
+          </div>
+        </div>
+
+        <Link
+          to={`/play/${section.id}`}
+          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition ${
+            section.questions.length > 0 
+              ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30' 
+              : 'bg-slate-800 text-slate-500 cursor-not-allowed pointer-events-none'
+          }`}
+        >
+          <Play className="w-5 h-5 fill-current" />
+          Avvia Quiz
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Modulo Upload + Classifica */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <Upload className="w-5 h-5 text-indigo-400" />
+              Carica file Word (.docx)
+            </h2>
+
+            <form onSubmit={handleUpload} className="space-y-4">
+              <div className="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-6 text-center cursor-pointer transition">
+                <input type="file" accept=".docx" onChange={handleFileChange} id="docxInput" className="hidden" />
+                <label htmlFor="docxInput" className="cursor-pointer block">
+                  <FileText className="w-10 h-10 text-slate-500 mx-auto mb-2" />
+                  <span className="text-sm font-medium text-slate-300 block">
+                    {file ? file.name : 'Seleziona un file Word'}
+                  </span>
+                  <span className="text-xs text-slate-500 block mt-1">Formato .docx supportato</span>
+                </label>
+              </div>
+
+              {uploadStatus && (
+                <div className="p-3 bg-emerald-950/50 border border-emerald-800 rounded-lg text-emerald-400 text-xs flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 shrink-0" />
+                  {uploadStatus}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={!file || uploading}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white py-2.5 rounded-lg font-semibold transition text-sm cursor-pointer"
+              >
+                {uploading ? 'Parsing in corso...' : 'Importa Domande'}
+              </button>
+            </form>
+          </div>
+
+          {/* Leaderboard Migliori Punteggi */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-amber-400" />
+              Classifica High Scores
+            </h3>
+            {leaderboard.length === 0 ? (
+              <p className="text-xs text-slate-500">Nessuna partita registrata.</p>
+            ) : (
+              <div className="space-y-2">
+                {leaderboard.map((res, rank) => (
+                  <div key={res.id} className="flex justify-between items-center bg-slate-800/50 px-3 py-2 rounded-lg text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-amber-400">#{rank + 1}</span>
+                      <span className="text-slate-300">{new Date(res.playedAt).toLocaleDateString()}</span>
+                    </div>
+                    <span className="font-bold text-indigo-400">{res.score} / {res.totalQuestions} pt</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Lista Domande con Modifica ed Eliminazione Singola */}
+        <div className="lg:col-span-2">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">Domande Presenti ({section.questions.length})</h2>
+              {section.questions.length > 0 && (
+                <button
+                  onClick={handleClearQuestions}
+                  className="flex items-center gap-1 text-red-400 hover:text-red-300 text-xs font-semibold transition"
+                >
+                  <Trash2 className="w-4 h-4" /> Svuota tutto
+                </button>
+              )}
+            </div>
+
+            {section.questions.length === 0 ? (
+              <div className="text-center py-12 text-slate-500 text-sm">
+                Nessuna domanda caricata. Utilizza il pannello di sinistra per caricare un documento Word.
+              </div>
+            ) : (
+              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+                {section.questions.map((q, idx) => (
+                  <div key={q.id} className="bg-slate-800/60 border border-slate-800 rounded-xl p-4 relative group">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="text-xs font-bold text-indigo-400">Domanda {idx + 1}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="bg-slate-700 text-slate-300 text-[10px] px-2 py-0.5 rounded font-mono">
+                          {q.type}
+                        </span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
+                          q.level === 'FACILE' ? 'bg-emerald-950 text-emerald-400' :
+                          q.level === 'MEDIO' ? 'bg-amber-950 text-amber-400' : 'bg-rose-950 text-rose-400'
+                        }`}>
+                          {q.level}
+                        </span>
+                        
+                        {/* Azioni Modifica e Cancella */}
+                        <button
+                          onClick={() => setEditingQuestion(q)}
+                          className="text-slate-400 hover:text-indigo-400 p-1"
+                          title="Modifica Domanda"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSingleQuestion(q.id)}
+                          className="text-slate-400 hover:text-red-400 p-1"
+                          title="Elimina Domanda"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <p className="text-white text-sm font-medium mb-3">{q.questionText}</p>
+
+                    {q.options?.length > 0 && (
+                      <div className="grid grid-cols-2 gap-2 mb-3">
+                        {q.options.map(opt => (
+                          <div key={opt.id} className="bg-slate-900/50 px-2.5 py-1.5 rounded text-xs text-slate-300 border border-slate-800">
+                            {opt.text}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="text-xs text-emerald-400 font-semibold bg-emerald-950/30 px-3 py-1.5 rounded border border-emerald-900/40">
+                      Risposta corretta: {q.correctAnswer}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <EditQuestionModal
+        isOpen={!!editingQuestion}
+        onClose={() => setEditingQuestion(null)}
+        question={editingQuestion}
+        onQuestionUpdated={fetchSectionData}
+      />
     </div>
   );
 }
@@ -9139,6 +8969,124 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server Node.js + WebSockets in esecuzione sulla porta ${PORT}`);
 });
+</file>
+
+<file path="frontend/src/components/CreateSectionModal.jsx">
+import React, { useState } from 'react';
+import { X, Upload } from 'lucide-react';
+import API from '../api/client';
+
+export default function CreateSectionModal({ isOpen, onClose, onSectionCreated }) {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [coverImage, setCoverImage] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCoverImage(file);
+      setPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!title.trim()) return alert('Inserisci un titolo!');
+
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
+    if (coverImage) formData.append('coverImage', coverImage);
+
+    try {
+      setLoading(true);
+      await API.post('/sections', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setTitle('');
+      setDescription('');
+      setCoverImage(null);
+      setPreview(null);
+      onSectionCreated();
+      onClose();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Errore durante la creazione');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md p-6 relative text-white">
+        <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+          <X className="w-6 h-6" />
+        </button>
+
+        <h2 className="text-2xl font-bold mb-4">Crea Nuova Sezione Anime</h2>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1 text-slate-300">Titolo Anime *</label>
+            <input
+              type="text"
+              required
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="es. CLIO e SANAE"
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1 text-slate-300">Descrizione</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Breve introduzione..."
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500 h-20"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1 text-slate-300">Immagine Copertina</label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg cursor-pointer transition text-sm">
+                <Upload className="w-4 h-4" />
+                <span>Scegli Foto</span>
+                <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+              </label>
+              {preview && (
+                <img src={preview} alt="Preview" className="w-12 h-12 rounded-lg object-cover border border-indigo-500" />
+              )}
+            </div>
+          </div>
+
+          <div className="pt-4 flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-slate-400 hover:text-white transition"
+            >
+              Annulla
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2 rounded-lg font-semibold transition disabled:opacity-50"
+            >
+              {loading ? 'Salvataggio...' : 'Crea Sezione'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 </file>
 
 <file path="frontend/src/pages/GuessCharacter.jsx">

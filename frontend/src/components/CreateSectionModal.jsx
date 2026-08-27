@@ -44,7 +44,6 @@ export default function CreateSectionModal({ isOpen, onClose, onSuccess }) {
       if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
-      alert(err.response?.data?.message || 'Errore durante la creazione');
     } finally {
       setLoading(false);
     }

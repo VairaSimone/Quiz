@@ -30,7 +30,7 @@ export default function Navbar({
     { name: 'Anime', path: '/stories', icon: BookOpen },
     { name: 'Indovina Personaggio', path: '/guess-character', icon: UserCheck },
     { name: 'Multiplayer', path: '/multiplayer', icon: Users },
-    { name: 'Domande Personaggio', path: '/domande-personaggio', icon: Sparkles }
+    { name: 'Domande', path: '/domande-personaggio', icon: Sparkles }
   ];
 
   return (

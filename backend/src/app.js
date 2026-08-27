@@ -3,6 +3,7 @@ const cors = require('cors');
 const path = require('path');
 const http = require('http');
 const { Server } = require('socket.io');
+const fs = require('fs');
 
 const sectionRoutes = require('./routes/sectionRoutes');
 const quizRoutes = require('./routes/quizRoutes');
@@ -23,6 +24,30 @@ app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
 app.use('/static', express.static(path.join(process.cwd(), 'static')));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+
+
+// Rotta per ottenere la lista dinamica dei file
+app.get('/api/game-media', (req, res) => {
+  try {
+    // __dirname è 'backend/src'
+    const charactersDir = path.join(__dirname, '../static/characters');       // -> backend/src/characters
+    const audioDir = path.join(__dirname, '../static/audio/it');   // -> backend/static/audio/it
+
+    const characters = fs.readdirSync(charactersDir)
+      .filter(file => !file.startsWith('.') && /\.(jpg|jpeg|png|webp)$/i.test(file));
+
+    const audioFiles = fs.readdirSync(audioDir)
+      .filter(file => !file.startsWith('.') && /\.(mp3|wav|ogg)$/i.test(file));
+
+    res.json({ characters, audioFiles });
+  } catch (error) {
+    console.error("Errore nel recupero dei file media:", error);
+    res.status(500).json({ error: "Impossibile leggere i file" });
+  }
+});
+
+app.use('/characters', express.static(path.join(__dirname, 'characters')));
 
 app.use('/api/sections', sectionRoutes);
 app.use('/api/quiz', quizRoutes);

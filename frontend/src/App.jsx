@@ -16,6 +16,8 @@ import GuessCharacter from './pages/GuessCharacter';
 import MultiplayerLobby from './pages/MultiplayerLobby';
 import MultiplayerPlay from './pages/MultiplayerPlay';
 import BackgroundMusic from './components/BackgroundMusic';
+import CharacterQuestions from './pages/CharacterQuestions';
+
 export default function App() {
   const [isAdmin, setIsAdmin] = useState(() => {
     return localStorage.getItem('isAdmin') === 'true';
@@ -106,6 +108,7 @@ export default function App() {
   <Route path="/guess-character" element={<GuessCharacter />} />
   <Route path="/multiplayer" element={<MultiplayerLobby />} />
   <Route path="/multiplayer-play" element={<MultiplayerPlay />} />
+  <Route path="/domande-personaggio" element={<CharacterQuestions />} />
 </Routes>
         </main>
 

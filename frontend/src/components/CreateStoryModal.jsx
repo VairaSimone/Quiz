@@ -3,7 +3,8 @@ import { X, Upload, FileJson } from 'lucide-react';
 import API from '../api/client';
 import Toast from './Toast';
 
-export default function CreateStoryModal({ isOpen, onClose, onStoryCreated }) {
+// 1. Sostituito onStoryCreated con onSuccess
+export default function CreateStoryModal({ isOpen, onClose, onSuccess }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [coverImage, setCoverImage] = useState(null);
@@ -34,7 +35,6 @@ export default function CreateStoryModal({ isOpen, onClose, onStoryCreated }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Controllo e richiesta automatica della password Admin se mancante
     let adminPassword = localStorage.getItem('adminPassword');
     if (!adminPassword) {
       adminPassword = prompt('Inserisci la password Admin per caricare il racconto:');
@@ -59,13 +59,15 @@ export default function CreateStoryModal({ isOpen, onClose, onStoryCreated }) {
 
     try {
       setLoading(true);
-await API.post('/stories', formData);
+      await API.post('/stories', formData);
       setTitle('');
       setDescription('');
       setCoverImage(null);
       setJsonFile(null);
       setPreview(null);
-      onStoryCreated();
+      
+      // 2. Chiamata a onSuccess() con Optional Chaining per evitare crash
+      if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
       if (err.response?.status === 401) {

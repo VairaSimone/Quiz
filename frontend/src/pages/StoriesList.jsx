@@ -62,15 +62,6 @@ const getImageUrl = (path) => {
           </div>
         </div>
 
-        {hasAdminAuth && (
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl font-bold transition text-xs shadow-lg shadow-indigo-600/30 cursor-pointer"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>Nuovo Racconto</span>
-          </button>
-        )}
       </div>
 
       {stories.length === 0 ? (

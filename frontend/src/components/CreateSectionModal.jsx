@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { X, Upload } from 'lucide-react';
 import API from '../api/client';
 
-export default function CreateSectionModal({ isOpen, onClose, onSectionCreated }) {
+// 1. Sostituisci 'onSectionCreated' con 'onSuccess'
+export default function CreateSectionModal({ isOpen, onClose, onSuccess }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [coverImage, setCoverImage] = useState(null);
@@ -33,11 +34,14 @@ export default function CreateSectionModal({ isOpen, onClose, onSectionCreated }
       await API.post('/sections', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+      
       setTitle('');
       setDescription('');
       setCoverImage(null);
       setPreview(null);
-      onSectionCreated();
+      
+      // 2. Chiama onSuccess con Optional Chaining per evitare crash
+      if (onSuccess) onSuccess();
       onClose();
     } catch (err) {
       alert(err.response?.data?.message || 'Errore durante la creazione');

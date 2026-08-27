@@ -1400,131 +1400,6 @@ Thumbs.db
 provider = "postgresql"
 </file>
 
-<file path="backend/src/controllers/sectionController.js">
-const prisma = require('../config/db');
-const fs = require('fs');
-const path = require('path');
-
-const cloudinary = require('../config/cloudinary');
-
-const deleteFromCloudinary = async (imageUrl) => {
-  if (!imageUrl) return;
-
-  try {
-    // Estrae il public_id dall'URL (es: da ".../quiz_covers/abc123.jpg" a "quiz_covers/abc123")
-    const parts = imageUrl.split('/');
-    const folderAndFile = parts.slice(-2).join('/'); // "quiz_covers/abc123.jpg"
-    const publicId = folderAndFile.substring(0, folderAndFile.lastIndexOf('.')); // "quiz_covers/abc123"
-
-    await cloudinary.uploader.destroy(publicId);
-  } catch (error) {
-    console.error('Errore durante l\'eliminazione dell\'immagine da Cloudinary:', error);
-  }
-};
-
-// 1. Ottieni tutte le sezioni con il conteggio delle domande
-exports.getAllSections = async (req, res) => {
-  try {
-    const sections = await prisma.section.findMany({
-      include: {
-        _count: {
-          select: { questions: true }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-
-    res.status(200).json({ success: true, data: sections });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Errore nel recupero delle sezioni', error: error.message });
-  }
-};
-
-// 2. Ottieni singola sezione con dettagli e dati correlati
-exports.getSectionById = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const section = await prisma.section.findUnique({
-      where: { id },
-      include: {
-        questions: {
-          include: { options: true }
-        },
-        gameResults: {
-          orderBy: { playedAt: 'desc' },
-          take: 5
-        }
-      }
-    });
-
-    if (!section) {
-      return res.status(404).json({ success: false, message: 'Sezione non trovata' });
-    }
-
-    res.status(200).json({ success: true, data: section });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Errore nel recupero della sezione', error: error.message });
-  }
-};
-
-// 3. Crea una nuova sezione (titolo, descrizione e immagine copertina)
-exports.createSection = async (req, res) => {
-  const { title, description } = req.body;
-
-  if (!title) {
-    return res.status(400).json({ success: false, message: 'Il titolo della sezione è obbligatorio' });
-  }
-
-  try {
-    const existing = await prisma.section.findUnique({ where: { title } });
-    if (existing) {
-      return res.status(400).json({ success: false, message: 'Una sezione con questo nome esiste già' });
-    }
-
-const coverImage = req.file ? req.file.path : null;
-
-    const newSection = await prisma.section.create({
-      data: {
-        title,
-        description,
-        coverImage
-      }
-    });
-
-    res.status(201).json({ success: true, data: newSection });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Errore durante la creazione della sezione', error: error.message });
-  }
-};
-
-// 4. Elimina una sezione ed i file locali associati
-exports.deleteSection = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const section = await prisma.section.findUnique({
-      where: { id } // Rimosso parseInt
-    });
-
-    if (!section) {
-      return res.status(404).json({ error: 'Sezione non trovata' });
-    }
-
-    if (section.coverImage) {
-      await deleteFromCloudinary(section.coverImage);
-    }
-
-    await prisma.section.delete({
-      where: { id } // Rimosso parseInt
-    });
-
-    res.json({ message: 'Sezione ed eventuale copertina eliminate con successo' });
-  } catch (error) {
-    res.status(500).json({ error: 'Errore durante l\'eliminazione della sezione' });
-  }
-};
-</file>
-
 <file path="backend/src/controllers/storyController.js">
 const prisma = require('../config/db');
 const cloudinary = require('../config/cloudinary');
@@ -5934,165 +5809,6 @@ API.interceptors.request.use((config) => {
 export default API;
 </file>
 
-<file path="frontend/src/components/CreateStoryModal.jsx">
-import React, { useState } from 'react';
-import { X, Upload, FileJson } from 'lucide-react';
-import API from '../api/client';
-import Toast from './Toast';
-
-export default function CreateStoryModal({ isOpen, onClose, onStoryCreated }) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [coverImage, setCoverImage] = useState(null);
-  const [jsonFile, setJsonFile] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState(null);
-
-  if (!isOpen) return null;
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setCoverImage(file);
-      setPreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleJsonChange = (e) => {
-    const file = e.target.files[0];
-    if (file && (file.type === 'application/json' || file.name.endsWith('.json'))) {
-      setJsonFile(file);
-    } else {
-      setToast({ message: 'Seleziona un file JSON valido!', type: 'error' });
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Controllo e richiesta automatica della password Admin se mancante
-    let adminPassword = localStorage.getItem('adminPassword');
-    if (!adminPassword) {
-      adminPassword = prompt('Inserisci la password Admin per caricare il racconto:');
-      if (!adminPassword) return;
-      localStorage.setItem('adminPassword', adminPassword);
-    }
-
-    if (!title.trim()) {
-      setToast({ message: 'Inserisci un titolo per il racconto!', type: 'error' });
-      return;
-    }
-    if (!jsonFile) {
-      setToast({ message: 'Carica il file JSON estratto da Telegram!', type: 'error' });
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('description', description);
-    formData.append('jsonFile', jsonFile);
-    if (coverImage) formData.append('coverImage', coverImage);
-
-    try {
-      setLoading(true);
-await API.post('/stories', formData);
-      setTitle('');
-      setDescription('');
-      setCoverImage(null);
-      setJsonFile(null);
-      setPreview(null);
-      onStoryCreated();
-      onClose();
-    } catch (err) {
-      if (err.response?.status === 401) {
-        localStorage.removeItem('adminPassword');
-        setToast({ message: 'Password Admin errata o scaduta. Riprova il caricamento.', type: 'error' });
-      } else {
-        setToast({ message: err.response?.data?.message || 'Errore nella creazione del racconto', type: 'error' });
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <>
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 relative text-white">
-          <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white">
-            <X className="w-6 h-6" />
-          </button>
-
-          <h2 className="text-xl font-bold mb-4">Carica Nuovo Racconto Telegram</h2>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Titolo Racconto *</label>
-              <input
-                type="text"
-                required
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="es. Capitolo 1 - Cometa"
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 font-bold"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Descrizione</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Breve introduzione alla storia..."
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 h-20"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">File JSON Telegram *</label>
-              <div className="border border-dashed border-slate-700 rounded-xl p-3 text-center bg-slate-950/50">
-                <input type="file" accept=".json" onChange={handleJsonChange} id="jsonInput" className="hidden" />
-                <label htmlFor="jsonInput" className="cursor-pointer flex items-center justify-center gap-2 text-xs font-medium text-indigo-400 hover:text-indigo-300">
-                  <FileJson className="w-5 h-5" />
-                  <span>{jsonFile ? jsonFile.name : 'Seleziona file .json'}</span>
-                </label>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Copertina (Opzionale)</label>
-              <div className="flex items-center gap-3">
-                <label className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-xl cursor-pointer text-xs font-semibold border border-slate-700">
-                  <Upload className="w-4 h-4 text-indigo-400" />
-                  <span>Scegli Copertina</span>
-                  <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
-                </label>
-                {preview && (
-                  <img src={preview} alt="Preview" className="w-10 h-10 rounded-lg object-cover border border-indigo-500" />
-                )}
-              </div>
-            </div>
-
-            <div className="pt-2 flex justify-end gap-3">
-              <button type="button" onClick={onClose} className="px-4 py-2 text-slate-400 hover:text-white text-xs font-bold">Annulla</button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-bold text-xs transition disabled:opacity-50 cursor-pointer shadow-lg shadow-indigo-600/30"
-              >
-                {loading ? 'Salvataggio...' : 'Crea Racconto'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-    </>
-  );
-}
-</file>
-
 <file path="frontend/src/pages/QuizAnime.jsx">
 import React, { useState, useEffect } from 'react';
 import API from '../api/client';
@@ -6679,6 +6395,136 @@ if (story.messages) {
 </html>
 </file>
 
+<file path="backend/src/controllers/sectionController.js">
+const prisma = require('../config/db');
+const fs = require('fs');
+const path = require('path');
+
+const cloudinary = require('../config/cloudinary');
+
+const deleteFromCloudinary = async (imageUrl) => {
+  if (!imageUrl) return;
+
+  try {
+    // Estrae il public_id dall'URL (es: da ".../quiz_covers/abc123.jpg" a "quiz_covers/abc123")
+    const parts = imageUrl.split('/');
+    const folderAndFile = parts.slice(-2).join('/'); // "quiz_covers/abc123.jpg"
+    const publicId = folderAndFile.substring(0, folderAndFile.lastIndexOf('.')); // "quiz_covers/abc123"
+
+    await cloudinary.uploader.destroy(publicId);
+  } catch (error) {
+    console.error('Errore durante l\'eliminazione dell\'immagine da Cloudinary:', error);
+  }
+};
+
+// 1. Ottieni tutte le sezioni con il conteggio delle domande
+exports.getAllSections = async (req, res) => {
+  try {
+    const sections = await prisma.section.findMany({
+      include: {
+        _count: {
+          select: { questions: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    res.status(200).json({ success: true, data: sections });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Errore nel recupero delle sezioni', error: error.message });
+  }
+};
+
+// 2. Ottieni singola sezione con dettagli e dati correlati
+exports.getSectionById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const section = await prisma.section.findUnique({
+      where: { id },
+      include: {
+        questions: {
+          include: { options: true }
+        },
+        gameResults: {
+          orderBy: { playedAt: 'desc' },
+          take: 5
+        }
+      }
+    });
+
+    if (!section) {
+      return res.status(404).json({ success: false, message: 'Sezione non trovata' });
+    }
+
+    res.status(200).json({ success: true, data: section });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Errore nel recupero della sezione', error: error.message });
+  }
+};
+
+// 3. Crea una nuova sezione (titolo, descrizione e immagine copertina)
+exports.createSection = async (req, res) => {
+  const { title, description } = req.body;
+
+  if (!title) {
+    return res.status(400).json({ success: false, message: 'Il titolo della sezione è obbligatorio' });
+  }
+
+  try {
+    const existing = await prisma.section.findUnique({ where: { title } });
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'Una sezione con questo nome esiste già' });
+    }
+
+const coverImage = req.file ? req.file.path : null;
+
+const newSection = await prisma.section.create({
+  data: {
+    title,
+    description,
+    coverImage
+  },
+  include: {
+    _count: {
+      select: { questions: true }
+    }
+  }
+});
+
+    res.status(201).json({ success: true, data: newSection });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Errore durante la creazione della sezione', error: error.message });
+  }
+};
+
+// 4. Elimina una sezione ed i file locali associati
+exports.deleteSection = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const section = await prisma.section.findUnique({
+      where: { id } // Rimosso parseInt
+    });
+
+    if (!section) {
+      return res.status(404).json({ error: 'Sezione non trovata' });
+    }
+
+    if (section.coverImage) {
+      await deleteFromCloudinary(section.coverImage);
+    }
+
+    await prisma.section.delete({
+      where: { id } // Rimosso parseInt
+    });
+
+    res.json({ message: 'Sezione ed eventuale copertina eliminate con successo' });
+  } catch (error) {
+    res.status(500).json({ error: 'Errore durante l\'eliminazione della sezione' });
+  }
+};
+</file>
+
 <file path="backend/src/utils/uploadConfig.js">
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
@@ -6775,6 +6621,165 @@ module.exports = upload;
   "keywords": [],
   "author": "",
   "license": "ISC"
+}
+</file>
+
+<file path="frontend/src/components/CreateStoryModal.jsx">
+import React, { useState } from 'react';
+import { X, Upload, FileJson } from 'lucide-react';
+import API from '../api/client';
+import Toast from './Toast';
+
+export default function CreateStoryModal({ isOpen, onClose, onStoryCreated }) {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [coverImage, setCoverImage] = useState(null);
+  const [jsonFile, setJsonFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  if (!isOpen) return null;
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCoverImage(file);
+      setPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleJsonChange = (e) => {
+    const file = e.target.files[0];
+    if (file && (file.type === 'application/json' || file.name.endsWith('.json'))) {
+      setJsonFile(file);
+    } else {
+      setToast({ message: 'Seleziona un file JSON valido!', type: 'error' });
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Controllo e richiesta automatica della password Admin se mancante
+    let adminPassword = localStorage.getItem('adminPassword');
+    if (!adminPassword) {
+      adminPassword = prompt('Inserisci la password Admin per caricare il racconto:');
+      if (!adminPassword) return;
+      localStorage.setItem('adminPassword', adminPassword);
+    }
+
+    if (!title.trim()) {
+      setToast({ message: 'Inserisci un titolo per il racconto!', type: 'error' });
+      return;
+    }
+    if (!jsonFile) {
+      setToast({ message: 'Carica il file JSON estratto da Telegram!', type: 'error' });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('description', description);
+    formData.append('jsonFile', jsonFile);
+    if (coverImage) formData.append('coverImage', coverImage);
+
+    try {
+      setLoading(true);
+await API.post('/stories', formData);
+      setTitle('');
+      setDescription('');
+      setCoverImage(null);
+      setJsonFile(null);
+      setPreview(null);
+      onStoryCreated();
+      onClose();
+    } catch (err) {
+      if (err.response?.status === 401) {
+        localStorage.removeItem('adminPassword');
+        setToast({ message: 'Password Admin errata o scaduta. Riprova il caricamento.', type: 'error' });
+      } else {
+        setToast({ message: err.response?.data?.message || 'Errore nella creazione del racconto', type: 'error' });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-md p-6 relative text-white">
+          <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-white">
+            <X className="w-6 h-6" />
+          </button>
+
+          <h2 className="text-xl font-bold mb-4">Carica Nuovo Racconto Telegram</h2>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Titolo Racconto *</label>
+              <input
+                type="text"
+                required
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="es. WK suisei"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 font-bold"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Descrizione</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Breve introduzione alla storia..."
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 h-20"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">File JSON Telegram *</label>
+              <div className="border border-dashed border-slate-700 rounded-xl p-3 text-center bg-slate-950/50">
+                <input type="file" accept=".json" onChange={handleJsonChange} id="jsonInput" className="hidden" />
+                <label htmlFor="jsonInput" className="cursor-pointer flex items-center justify-center gap-2 text-xs font-medium text-indigo-400 hover:text-indigo-300">
+                  <FileJson className="w-5 h-5" />
+                  <span>{jsonFile ? jsonFile.name : 'Seleziona file .json'}</span>
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-400 mb-1 uppercase">Copertina (Opzionale)</label>
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-xl cursor-pointer text-xs font-semibold border border-slate-700">
+                  <Upload className="w-4 h-4 text-indigo-400" />
+                  <span>Scegli Copertina</span>
+                  <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                </label>
+                {preview && (
+                  <img src={preview} alt="Preview" className="w-10 h-10 rounded-lg object-cover border border-indigo-500" />
+                )}
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end gap-3">
+              <button type="button" onClick={onClose} className="px-4 py-2 text-slate-400 hover:text-white text-xs font-bold">Annulla</button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-bold text-xs transition disabled:opacity-50 cursor-pointer shadow-lg shadow-indigo-600/30"
+              >
+                {loading ? 'Salvataggio...' : 'Crea Racconto'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+    </>
+  );
 }
 </file>
 
@@ -6933,93 +6938,6 @@ export default function EditQuestionModal({ isOpen, onClose, question, onQuestio
 }
 </file>
 
-<file path="frontend/src/components/SectionCard.jsx">
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Play, FileText, Trash2, Settings } from 'lucide-react';
-import { SERVER_URL } from '../api/client';
-
-export default function SectionCard({ section, onDelete, isAdmin }) {
-  const imageUrl = section.coverImage 
-    ? `${SERVER_URL}${section.coverImage}`
-    : 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=60';
-
-  return (
-    <div className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700 hover:border-slate-600 transition flex flex-col shadow-lg">
-      <div className="relative h-48 w-full overflow-hidden group">
-        <img 
-          src={imageUrl} 
-          alt={section.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition duration-300" 
-        />
-        {isAdmin && (
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              onDelete(section.id);
-            }}
-            className="absolute top-2 right-2 bg-red-600/80 hover:bg-red-600 text-white p-2 rounded-full transition opacity-0 group-hover:opacity-100 cursor-pointer"
-            title="Elimina sezione"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        )}
-      </div>
-
-      <div className="p-5 flex flex-col flex-grow">
-        <h3 className="text-xl font-bold text-white mb-1">{section.title}</h3>
-        <p className="text-slate-400 text-sm mb-4 line-clamp-2">
-          {section.description || 'Nessuna descrizione.'}
-        </p>
-
-        <div className="mt-auto pt-4 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400 mb-4">
-          <span className="flex items-center gap-1 font-semibold text-indigo-400">
-            <FileText className="w-4 h-4" />
-            {section._count?.questions || 0} Domande
-          </span>
-        </div>
-
-        {/* Pulsanti differenziati tra Utente Normale e Admin */}
-        {isAdmin ? (
-          <div className="grid grid-cols-2 gap-2">
-            <Link
-              to={`/admin/section/${section.id}`}
-              className="flex items-center justify-center gap-1 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium py-2 rounded-lg transition"
-            >
-              <Settings className="w-4 h-4" />
-              Gestisci
-            </Link>
-            <Link
-              to={`/play/${section.id}`}
-              className={`flex items-center justify-center gap-1 text-sm font-medium py-2 rounded-lg transition ${
-                (section._count?.questions || 0) > 0
-                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
-                  : 'bg-slate-700 text-slate-500 cursor-not-allowed pointer-events-none'
-              }`}
-            >
-              <Play className="w-4 h-4" />
-              Gioca
-            </Link>
-          </div>
-        ) : (
-          <Link
-            to={`/play/${section.id}`}
-            className={`w-full flex items-center justify-center gap-2 text-sm font-bold py-2.5 rounded-lg transition ${
-              (section._count?.questions || 0) > 0
-                ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20'
-                : 'bg-slate-700 text-slate-500 cursor-not-allowed pointer-events-none'
-            }`}
-          >
-            <Play className="w-4 h-4 fill-current" />
-            Gioca Ora
-          </Link>
-        )}
-      </div>
-    </div>
-  );
-}
-</file>
-
 <file path="frontend/src/pages/Home.jsx">
 import React from 'react';
 import { Link } from 'react-router-dom';
@@ -7164,385 +7082,6 @@ export default function Home() {
             );
           })}
         </div>
-
-      </div>
-    </div>
-  );
-}
-</file>
-
-<file path="frontend/src/pages/SectionDetail.jsx">
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import API, { SERVER_URL } from '../api/client';
-import EditQuestionModal from '../components/EditQuestionModal';
-import { Upload, FileText, Play, Trash2, ArrowLeft, Trophy, CheckCircle, Edit3 } from 'lucide-react';
-
-export default function SectionDetail() {
-  const { id } = useParams();
-  const [section, setSection] = useState(null);
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const [file, setFile] = useState(null);
-  const [uploadStatus, setUploadStatus] = useState(null);
-  const [editingQuestion, setEditingQuestion] = useState(null);
-
-  const fetchSectionData = async () => {
-    try {
-      setLoading(true);
-      const [resSection, resLeaderboard] = await Promise.all([
-        API.get(`/sections/${id}`),
-        API.get(`/quiz/sections/${id}/leaderboard`)
-      ]);
-      setSection(resSection.data.data);
-      setLeaderboard(resLeaderboard.data.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchSectionData();
-  }, [id]);
-
-  const handleFileChange = (e) => {
-    const selected = e.target.files[0];
-    if (selected && selected.name.endsWith('.docx')) {
-      setFile(selected);
-      setUploadStatus(null);
-    } else {
-      alert('Seleziona un file valido con estensione .docx');
-    }
-  };
-
-  const handleUpload = async (e) => {
-    e.preventDefault();
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('docxFile', file);
-
-    try {
-      setUploading(true);
-      const res = await API.post(`/quiz/sections/${id}/upload-docx`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      setUploadStatus(`Successo! Importate ${res.data.count} domande.`);
-      setFile(null);
-      fetchSectionData();
-    } catch (err) {
-      alert(err.response?.data?.message || 'Errore nell\'upload del file');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleDeleteSingleQuestion = async (qId) => {
-    if (!window.confirm('Eliminare questa specifica domanda?')) return;
-    try {
-      await API.delete(`/quiz/questions/${qId}`);
-      fetchSectionData();
-    } catch (err) {
-      alert('Errore durante l\'eliminazione della domanda');
-    }
-  };
-
-  const handleClearQuestions = async () => {
-    if (!window.confirm('Vuoi rimuovere TUTTE le domande salvate per questa sezione?')) return;
-    try {
-      await API.delete(`/quiz/sections/${id}/questions`);
-      fetchSectionData();
-    } catch (err) {
-      alert('Errore nello svuotamento delle domande');
-    }
-  };
-
-  if (loading) return <div className="text-center py-20 text-slate-400">Caricamento in corso...</div>;
-  if (!section) return <div className="text-center py-20 text-red-400">Sezione non trovata!</div>;
-
-  return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-<Link to="/admin" className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 text-sm">
-  <ArrowLeft className="w-4 h-4" /> Torna al Pannello Admin
-</Link>
-
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-8 flex flex-col md:flex-row gap-6 items-center justify-between">
-        <div className="flex items-center gap-5">
-          <img 
-            src={section.coverImage ? `${SERVER_URL}${section.coverImage}` : 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600'} 
-            alt={section.title}
-            className="w-24 h-24 rounded-xl object-cover border border-slate-700" 
-          />
-          <div>
-            <h1 className="text-3xl font-extrabold text-white mb-1">{section.title}</h1>
-            <p className="text-slate-400 text-sm">{section.description || 'Nessuna descrizione.'}</p>
-            <div className="mt-3 flex items-center gap-4 text-xs font-semibold text-indigo-400">
-              <span>{section.questions.length} domande registrate</span>
-            </div>
-          </div>
-        </div>
-
-        <Link
-          to={`/play/${section.id}`}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition ${
-            section.questions.length > 0 
-              ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30' 
-              : 'bg-slate-800 text-slate-500 cursor-not-allowed pointer-events-none'
-          }`}
-        >
-          <Play className="w-5 h-5 fill-current" />
-          Avvia Quiz
-        </Link>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Modulo Upload + Classifica */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-              <Upload className="w-5 h-5 text-indigo-400" />
-              Carica file Word (.docx)
-            </h2>
-
-            <form onSubmit={handleUpload} className="space-y-4">
-              <div className="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-6 text-center cursor-pointer transition">
-                <input type="file" accept=".docx" onChange={handleFileChange} id="docxInput" className="hidden" />
-                <label htmlFor="docxInput" className="cursor-pointer block">
-                  <FileText className="w-10 h-10 text-slate-500 mx-auto mb-2" />
-                  <span className="text-sm font-medium text-slate-300 block">
-                    {file ? file.name : 'Seleziona un file Word'}
-                  </span>
-                  <span className="text-xs text-slate-500 block mt-1">Formato .docx supportato</span>
-                </label>
-              </div>
-
-              {uploadStatus && (
-                <div className="p-3 bg-emerald-950/50 border border-emerald-800 rounded-lg text-emerald-400 text-xs flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 shrink-0" />
-                  {uploadStatus}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={!file || uploading}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white py-2.5 rounded-lg font-semibold transition text-sm cursor-pointer"
-              >
-                {uploading ? 'Parsing in corso...' : 'Importa Domande'}
-              </button>
-            </form>
-          </div>
-
-          {/* Leaderboard Migliori Punteggi */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-            <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-amber-400" />
-              Classifica High Scores
-            </h3>
-            {leaderboard.length === 0 ? (
-              <p className="text-xs text-slate-500">Nessuna partita registrata.</p>
-            ) : (
-              <div className="space-y-2">
-                {leaderboard.map((res, rank) => (
-                  <div key={res.id} className="flex justify-between items-center bg-slate-800/50 px-3 py-2 rounded-lg text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-amber-400">#{rank + 1}</span>
-                      <span className="text-slate-300">{new Date(res.playedAt).toLocaleDateString()}</span>
-                    </div>
-                    <span className="font-bold text-indigo-400">{res.score} / {res.totalQuestions} pt</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Lista Domande con Modifica ed Eliminazione Singola */}
-        <div className="lg:col-span-2">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">Domande Presenti ({section.questions.length})</h2>
-              {section.questions.length > 0 && (
-                <button
-                  onClick={handleClearQuestions}
-                  className="flex items-center gap-1 text-red-400 hover:text-red-300 text-xs font-semibold transition"
-                >
-                  <Trash2 className="w-4 h-4" /> Svuota tutto
-                </button>
-              )}
-            </div>
-
-            {section.questions.length === 0 ? (
-              <div className="text-center py-12 text-slate-500 text-sm">
-                Nessuna domanda caricata. Utilizza il pannello di sinistra per caricare un documento Word.
-              </div>
-            ) : (
-              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-                {section.questions.map((q, idx) => (
-                  <div key={q.id} className="bg-slate-800/60 border border-slate-800 rounded-xl p-4 relative group">
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="text-xs font-bold text-indigo-400">Domanda {idx + 1}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="bg-slate-700 text-slate-300 text-[10px] px-2 py-0.5 rounded font-mono">
-                          {q.type}
-                        </span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
-                          q.level === 'FACILE' ? 'bg-emerald-950 text-emerald-400' :
-                          q.level === 'MEDIO' ? 'bg-amber-950 text-amber-400' : 'bg-rose-950 text-rose-400'
-                        }`}>
-                          {q.level}
-                        </span>
-                        
-                        {/* Azioni Modifica e Cancella */}
-                        <button
-                          onClick={() => setEditingQuestion(q)}
-                          className="text-slate-400 hover:text-indigo-400 p-1"
-                          title="Modifica Domanda"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteSingleQuestion(q.id)}
-                          className="text-slate-400 hover:text-red-400 p-1"
-                          title="Elimina Domanda"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <p className="text-white text-sm font-medium mb-3">{q.questionText}</p>
-
-                    {q.options?.length > 0 && (
-                      <div className="grid grid-cols-2 gap-2 mb-3">
-                        {q.options.map(opt => (
-                          <div key={opt.id} className="bg-slate-900/50 px-2.5 py-1.5 rounded text-xs text-slate-300 border border-slate-800">
-                            {opt.text}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="text-xs text-emerald-400 font-semibold bg-emerald-950/30 px-3 py-1.5 rounded border border-emerald-900/40">
-                      Risposta corretta: {q.correctAnswer}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <EditQuestionModal
-        isOpen={!!editingQuestion}
-        onClose={() => setEditingQuestion(null)}
-        question={editingQuestion}
-        onQuestionUpdated={fetchSectionData}
-      />
-    </div>
-  );
-}
-</file>
-
-<file path="frontend/src/pages/StoriesList.jsx">
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { BookOpen, Trash2, ArrowRight, Clock, BookMarked, Sparkles } from 'lucide-react';
-
-export default function StoriesList({ stories, onDeleteStory, isAdmin }) {
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 pb-16">
-      {/* Background Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-purple-500/10 via-indigo-500/5 to-transparent blur-3xl pointer-events-none" />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 relative z-10">
-
-        {/* Header Sezione & Contatore */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-purple-500/10 border border-purple-500/20 rounded-xl">
-              <BookMarked className="w-6 h-6 text-purple-400" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white tracking-wide">Catalogo Storie</h2>
-              <p className="text-xs text-slate-400">Scegli un'avventura e inizia a leggere</p>
-            </div>
-          </div>
-
-          <span className="text-xs font-medium text-slate-400 bg-slate-900 border border-slate-800 px-3.5 py-2 rounded-xl">
-            Storie disponibili: <strong className="text-purple-400 font-bold">{stories?.length || 0}</strong>
-          </span>
-        </div>
-
-        {/* Griglia Storie / Visual Novel */}
-        {!stories || stories.length === 0 ? (
-          <div className="text-center py-16 bg-slate-900/40 border border-dashed border-slate-800 rounded-3xl backdrop-blur-sm">
-            <BookOpen className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-            <h3 className="text-base font-semibold text-slate-300">Nessun racconto presente</h3>
-            <p className="text-xs text-slate-500 max-w-xs mx-auto mt-1">
-              Gli amministratori possono aggiungere una nuova storia interattiva tramite il pulsante nella barra di navigazione.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {stories.map((story) => (
-              <div
-                key={story.id}
-                className="group relative bg-slate-900/60 backdrop-blur-md border border-slate-800/80 hover:border-purple-500/40 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/10 flex flex-col justify-between overflow-hidden"
-              >
-                {/* Glow decorativo al passaggio del mouse */}
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-
-                <div>
-                  {/* Badge & Azioni Admin */}
-                  <div className="flex items-start justify-between gap-3 mb-4">
-                    <span className="px-3 py-1 rounded-lg text-xs font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                      {story.genre || 'Visual Novel'}
-                    </span>
-
-                    {isAdmin && onDeleteStory && (
-                      <button
-                        onClick={() => onDeleteStory(story.id)}
-                        className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
-                        title="Elimina Storia"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Titolo e Descrizione */}
-                  <h3 className="text-lg font-bold text-white group-hover:text-purple-300 transition-colors mb-2 line-clamp-1">
-                    {story.title}
-                  </h3>
-                  <p className="text-slate-400 text-xs leading-relaxed line-clamp-3 mb-6">
-                    {story.description || 'Nessuna sinossi disponibile per questo racconto.'}
-                  </p>
-                </div>
-
-                {/* Footer della Card */}
-                <div className="pt-4 border-t border-slate-800/60 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-                    <Clock className="w-4 h-4 text-purple-400" />
-                    <span>{story.estimated_read_time || '~5 min'}</span>
-                  </div>
-
-                  <Link
-                    to={`/story/${story.id}`}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-semibold shadow-md shadow-purple-600/20 group-hover:shadow-purple-500/30 transition-all cursor-pointer"
-                  >
-                    <span>Leggi</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
 
       </div>
     </div>
@@ -8029,6 +7568,93 @@ socket.on('start_game', ({ roomCode }) => {
     });
   });
 };
+</file>
+
+<file path="frontend/src/components/SectionCard.jsx">
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Play, FileText, Trash2, Settings } from 'lucide-react';
+import { SERVER_URL } from '../api/client';
+
+export default function SectionCard({ section, onDelete, isAdmin }) {
+  const imageUrl = section.coverImage 
+    ? `${section.coverImage}`
+    : 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=60';
+
+  return (
+    <div className="bg-slate-800 rounded-xl overflow-hidden border border-slate-700 hover:border-slate-600 transition flex flex-col shadow-lg">
+      <div className="relative h-48 w-full overflow-hidden group">
+        <img 
+          src={imageUrl} 
+          alt={section.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition duration-300" 
+        />
+        {isAdmin && (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              onDelete(section.id);
+            }}
+            className="absolute top-2 right-2 bg-red-600/80 hover:bg-red-600 text-white p-2 rounded-full transition opacity-0 group-hover:opacity-100 cursor-pointer"
+            title="Elimina sezione"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      <div className="p-5 flex flex-col flex-grow">
+        <h3 className="text-xl font-bold text-white mb-1">{section.title}</h3>
+        <p className="text-slate-400 text-sm mb-4 line-clamp-2">
+          {section.description || 'Nessuna descrizione.'}
+        </p>
+
+        <div className="mt-auto pt-4 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400 mb-4">
+          <span className="flex items-center gap-1 font-semibold text-indigo-400">
+            <FileText className="w-4 h-4" />
+            {section._count?.questions || 0} Domande
+          </span>
+        </div>
+
+        {/* Pulsanti differenziati tra Utente Normale e Admin */}
+        {isAdmin ? (
+          <div className="grid grid-cols-2 gap-2">
+            <Link
+              to={`/admin/section/${section.id}`}
+              className="flex items-center justify-center gap-1 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm font-medium py-2 rounded-lg transition"
+            >
+              <Settings className="w-4 h-4" />
+              Gestisci
+            </Link>
+            <Link
+              to={`/play/${section.id}`}
+              className={`flex items-center justify-center gap-1 text-sm font-medium py-2 rounded-lg transition ${
+                (section._count?.questions || 0) > 0
+                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                  : 'bg-slate-700 text-slate-500 cursor-not-allowed pointer-events-none'
+              }`}
+            >
+              <Play className="w-4 h-4" />
+              Gioca
+            </Link>
+          </div>
+        ) : (
+          <Link
+            to={`/play/${section.id}`}
+            className={`w-full flex items-center justify-center gap-2 text-sm font-bold py-2.5 rounded-lg transition ${
+              (section._count?.questions || 0) > 0
+                ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20'
+                : 'bg-slate-700 text-slate-500 cursor-not-allowed pointer-events-none'
+            }`}
+          >
+            <Play className="w-4 h-4 fill-current" />
+            Gioca Ora
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
 </file>
 
 <file path="frontend/src/pages/MultiplayerLobby.jsx">
@@ -8912,6 +8538,133 @@ export default function MultiplayerPlay() {
 }
 </file>
 
+<file path="frontend/src/pages/StoriesList.jsx">
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import API, { SERVER_URL } from '../api/client';
+import CreateStoryModal from '../components/CreateStoryModal';
+import { BookOpen, PlusCircle, Trash2, Sparkles, MessageSquare } from 'lucide-react';
+
+export default function StoriesList({ isAdmin }) {
+  const [stories, setStories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+const getImageUrl = (path) => {
+  if (!path) return 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600&auto=format&fit=crop&q=60';
+  return path.startsWith('http') ? path : `${SERVER_URL}${path}`;
+};
+  // Determina se l'utente è un Admin verificando anche il localStorage
+  const hasAdminAuth = isAdmin || Boolean(localStorage.getItem('adminPassword'));
+
+  const fetchStories = async () => {
+    try {
+      setLoading(true);
+      const res = await API.get('/stories');
+      setStories(res.data.data);
+    } catch (err) {
+      console.error('Errore durante il recupero dei racconti:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStories();
+  }, []);
+
+  const handleDelete = async (id, e) => {
+    e.preventDefault();
+    if (!window.confirm('Sei sicuro di voler eliminare questo racconto?')) return;
+    try {
+      await API.delete(`/stories/${id}`);
+      setStories(stories.filter(s => s.id !== id));
+    } catch (err) {
+      alert('Errore durante l\'eliminazione del racconto');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64 text-indigo-400">
+        <Sparkles className="w-8 h-8 animate-spin" />
+        <span className="ml-2 font-medium">Caricamento racconti...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <BookOpen className="w-8 h-8 text-indigo-400" />
+          <div>
+            <h1 className="text-3xl font-extrabold text-white">Racconti & Storie</h1>
+            <p className="text-slate-400 text-sm">Conversazioni Telegram da leggere in formato chat.</p>
+          </div>
+        </div>
+
+      </div>
+
+      {stories.length === 0 ? (
+        <div className="bg-slate-900 border border-dashed border-slate-800 rounded-2xl p-12 text-center text-slate-400">
+          <BookOpen className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+          <p className="text-lg mb-1 font-semibold text-slate-300">Nessun racconto presente.</p>
+          <p className="text-xs text-slate-500">I racconti caricati dall'amministratore appariranno qui.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {stories.map(story => {
+const cover = getImageUrl(story.coverImage);
+            return (
+              <div key={story.id} className="bg-slate-900 rounded-2xl border border-slate-800 hover:border-slate-700 transition flex flex-col overflow-hidden shadow-xl group">
+                <div className="relative h-48 w-full overflow-hidden bg-slate-950">
+                  <img src={cover} alt={story.title} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                  {hasAdminAuth && (
+                    <button
+                      onClick={(e) => handleDelete(story.id, e)}
+                      className="absolute top-3 right-3 bg-rose-600/90 hover:bg-rose-600 text-white p-2 rounded-full transition cursor-pointer"
+                      title="Elimina racconto"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="p-5 flex flex-col flex-grow">
+                  <h3 className="text-xl font-bold text-white mb-2">{story.title}</h3>
+                  <p className="text-slate-400 text-xs mb-4 line-clamp-3 leading-relaxed">
+                    {story.description || 'Nessuna descrizione.'}
+                  </p>
+
+                  <div className="mt-auto pt-4 border-t border-slate-800 flex items-center justify-between">
+                    <span className="text-[10px] font-semibold text-slate-500">
+                      {new Date(story.createdAt).toLocaleDateString()}
+                    </span>
+                    <Link
+                      to={`/stories/${story.id}`}
+                      className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-md shadow-indigo-600/20"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      Leggi Chat
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <CreateStoryModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onStoryCreated={fetchStories}
+      />
+    </div>
+  );
+}
+</file>
+
 <file path="backend/src/app.js">
 const express = require('express');
 const cors = require('cors');
@@ -9694,178 +9447,279 @@ export default function GuessCharacter() {
 }
 </file>
 
-<file path="frontend/src/App.jsx">
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+<file path="frontend/src/pages/SectionDetail.jsx">
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import API, { SERVER_URL } from '../api/client';
+import EditQuestionModal from '../components/EditQuestionModal';
+import { Upload, FileText, Play, Trash2, ArrowLeft, Trophy, CheckCircle, Edit3 } from 'lucide-react';
 
-import Navbar from './components/Navbar';
-import CreateSectionModal from './components/CreateSectionModal';
-import CreateStoryModal from './components/CreateStoryModal';
-import Toast from './components/Toast';
+export default function SectionDetail() {
+  const { id } = useParams();
+  const [section, setSection] = useState(null);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [file, setFile] = useState(null);
+  const [uploadStatus, setUploadStatus] = useState(null);
+  const [editingQuestion, setEditingQuestion] = useState(null);
 
-import Home from './pages/Home';
-import QuizAnime from './pages/QuizAnime';
-import SectionDetail from './pages/SectionDetail';
-import QuizPlay from './pages/QuizPlay';
-import StoriesList from './pages/StoriesList';
-import StoryDetail from './pages/StoryDetail';
-import GuessCharacter from './pages/GuessCharacter';
-import MultiplayerLobby from './pages/MultiplayerLobby';
-import MultiplayerPlay from './pages/MultiplayerPlay';
-import BackgroundMusic from './components/BackgroundMusic';
-export default function App() {
-  const [isAdmin, setIsAdmin] = useState(() => {
-    return localStorage.getItem('isAdmin') === 'true';
-  });
-  const [adminPasswordModal, setAdminPasswordModal] = useState(false);
-  const [passwordInput, setPasswordInput] = useState('');
-  
-  // Modali di creazione
-  const [isCreateSectionOpen, setIsCreateSectionOpen] = useState(false);
-  const [isCreateStoryOpen, setIsCreateStoryOpen] = useState(false);
-
-  // Stato fittizio/fetch per le sezioni
-  const [sections, setSections] = useState([]);
-  const [toast, setToast] = useState({ message: '', type: '' });
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  const showToast = (message, type = 'success') => {
-    setToast({ message, type });
-  };
-
-  const handleAdminToggle = () => {
-    if (isAdmin) {
-      setIsAdmin(false);
-      localStorage.removeItem('isAdmin');
-      localStorage.removeItem('adminPassword');
-      showToast('Modalità Admin disattivata', 'error');
-    } else {
-      setAdminPasswordModal(true);
+  const fetchSectionData = async () => {
+    try {
+      setLoading(true);
+      const [resSection, resLeaderboard] = await Promise.all([
+        API.get(`/sections/${id}`),
+        API.get(`/quiz/sections/${id}/leaderboard`)
+      ]);
+      setSection(resSection.data.data);
+      setLeaderboard(resLeaderboard.data.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleAdminLoginSubmit = (e) => {
+  useEffect(() => {
+    fetchSectionData();
+  }, [id]);
+
+  const handleFileChange = (e) => {
+    const selected = e.target.files[0];
+    if (selected && selected.name.endsWith('.docx')) {
+      setFile(selected);
+      setUploadStatus(null);
+    } else {
+      alert('Seleziona un file valido con estensione .docx');
+    }
+  };
+
+  const handleUpload = async (e) => {
     e.preventDefault();
-    if (!passwordInput) return;
+    if (!file) return;
 
-    localStorage.setItem('adminPassword', passwordInput);
-    localStorage.setItem('isAdmin', 'true');
-    setIsAdmin(true);
-    setPasswordInput('');
-    setAdminPasswordModal(false);
-    showToast('Modalità Admin attivata!', 'success');
+    const formData = new FormData();
+    formData.append('docxFile', file);
+
+    try {
+      setUploading(true);
+      const res = await API.post(`/quiz/sections/${id}/upload-docx`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setUploadStatus(`Successo! Importate ${res.data.count} domande.`);
+      setFile(null);
+      fetchSectionData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Errore nell\'upload del file');
+    } finally {
+      setUploading(false);
+    }
   };
 
-  const handleDeleteSection = (id) => {
-    setSections((prev) => prev.filter((sec) => sec.id !== id));
-    showToast('Sezione eliminata', 'error');
+  const handleDeleteSingleQuestion = async (qId) => {
+    if (!window.confirm('Eliminare questa specifica domanda?')) return;
+    try {
+      await API.delete(`/quiz/questions/${qId}`);
+      fetchSectionData();
+    } catch (err) {
+      alert('Errore durante l\'eliminazione della domanda');
+    }
   };
 
-  const triggerRefresh = () => setRefreshTrigger((prev) => prev + 1);
+  const handleClearQuestions = async () => {
+    if (!window.confirm('Vuoi rimuovere TUTTE le domande salvate per questa sezione?')) return;
+    try {
+      await API.delete(`/quiz/sections/${id}/questions`);
+      fetchSectionData();
+    } catch (err) {
+      alert('Errore nello svuotamento delle domande');
+    }
+  };
+
+  if (loading) return <div className="text-center py-20 text-slate-400">Caricamento in corso...</div>;
+  if (!section) return <div className="text-center py-20 text-red-400">Sezione non trovata!</div>;
 
   return (
-    <Router>
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-        <BackgroundMusic />
-        <Navbar 
-          isAdmin={isAdmin}
-          onToggleAdmin={handleAdminToggle}
-          onOpenCreateSection={() => setIsCreateSectionOpen(true)}
-          onOpenCreateStory={() => setIsCreateStoryOpen(true)}
-        />
+    <div className="max-w-6xl mx-auto px-4 py-8">
+<Link to="/quizzes" className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-6 text-sm">
+  <ArrowLeft className="w-4 h-4" /> Torna indietro
+</Link>
 
-        <main className="flex-1">
-          <Routes>
-            {/* Pagina Principale Hub */}
-            <Route path="/" element={<Home />} />
-
-            {/* Pagina Quiz Separata */}
-            <Route 
-              path="/quizzes" 
-              element={
-                <QuizAnime 
-                  sections={sections} 
-                  onDeleteSection={handleDeleteSection} 
-                  isAdmin={isAdmin} 
-                />
-              } 
-            />
-
-            <Route path="/section/:id" element={<SectionDetail isAdmin={isAdmin} />} />
-            <Route path="/quiz/:id" element={<QuizPlay />} />
-            <Route path="/stories" element={<StoriesList refreshTrigger={refreshTrigger} isAdmin={isAdmin} />} />
-            <Route path="/story/:id" element={<StoryDetail />} />
-            <Route path="/guess-character" element={<GuessCharacter />} />
-            <Route path="/multiplayer" element={<MultiplayerLobby />} />
-+ <Route path="/multiplayer-play" element={<MultiplayerPlay />} />          </Routes>
-        </main>
-
-        {/* Modal Password Admin */}
-        {adminPasswordModal && (
-          <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
-              <h3 className="text-xl font-bold text-white mb-2">Accesso Amministratore</h3>
-              <p className="text-sm text-slate-400 mb-4">
-                Inserisci la password per sbloccare la creazione di quiz e storie.
-              </p>
-              <form onSubmit={handleAdminLoginSubmit} className="space-y-4">
-                <input
-                  type="password"
-                  placeholder="Password Admin..."
-                  value={passwordInput}
-                  onChange={(e) => setPasswordInput(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-                  autoFocus
-                />
-                <div className="flex justify-end gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setAdminPasswordModal(false)}
-                    className="px-4 py-2 text-sm text-slate-400 hover:text-white cursor-pointer"
-                  >
-                    Annulla
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold cursor-pointer"
-                  >
-                    Conferma
-                  </button>
-                </div>
-              </form>
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-8 flex flex-col md:flex-row gap-6 items-center justify-between">
+        <div className="flex items-center gap-5">
+          <img 
+            src={section.coverImage ? `${section.coverImage}` : 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600'} 
+            alt={section.title}
+            className="w-24 h-24 rounded-xl object-cover border border-slate-700" 
+          />
+          <div>
+            <h1 className="text-3xl font-extrabold text-white mb-1">{section.title}</h1>
+            <p className="text-slate-400 text-sm">{section.description || 'Nessuna descrizione.'}</p>
+            <div className="mt-3 flex items-center gap-4 text-xs font-semibold text-indigo-400">
+<span>{section.questions?.length || 0} domande registrate</span>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Modale Creazione Sezione Quiz */}
-        <CreateSectionModal 
-          isOpen={isCreateSectionOpen}
-          onClose={() => setIsCreateSectionOpen(false)} 
-          onSuccess={() => {
-            setIsCreateSectionOpen(false);
-            triggerRefresh();
-            showToast('Sezione Quiz creata con successo!');
-          }} 
-        />
-
-        {/* Modale Creazione Racconto */}
-        <CreateStoryModal 
-          isOpen={isCreateStoryOpen}
-          onClose={() => setIsCreateStoryOpen(false)} 
-          onSuccess={() => {
-            setIsCreateStoryOpen(false);
-            triggerRefresh();
-            showToast('Racconto creato con successo!');
-          }} 
-        />
-
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
-          onClose={() => setToast({ message: '', type: '' })} 
-        />
+    <Link
+  to={`/play/${section.id}`}
+  className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition ${
+    (section.questions?.length || 0) > 0 
+      ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30' 
+      : 'bg-slate-800 text-slate-500 cursor-not-allowed pointer-events-none'
+  }`}
+>
+          <Play className="w-5 h-5 fill-current" />
+          Avvia Quiz
+        </Link>
       </div>
-    </Router>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Modulo Upload + Classifica */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <Upload className="w-5 h-5 text-indigo-400" />
+              Carica file Word (.docx)
+            </h2>
+
+            <form onSubmit={handleUpload} className="space-y-4">
+              <div className="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-6 text-center cursor-pointer transition">
+                <input type="file" accept=".docx" onChange={handleFileChange} id="docxInput" className="hidden" />
+                <label htmlFor="docxInput" className="cursor-pointer block">
+                  <FileText className="w-10 h-10 text-slate-500 mx-auto mb-2" />
+                  <span className="text-sm font-medium text-slate-300 block">
+                    {file ? file.name : 'Seleziona un file Word'}
+                  </span>
+                  <span className="text-xs text-slate-500 block mt-1">Formato .docx supportato</span>
+                </label>
+              </div>
+
+              {uploadStatus && (
+                <div className="p-3 bg-emerald-950/50 border border-emerald-800 rounded-lg text-emerald-400 text-xs flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 shrink-0" />
+                  {uploadStatus}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={!file || uploading}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white py-2.5 rounded-lg font-semibold transition text-sm cursor-pointer"
+              >
+                {uploading ? 'Parsing in corso...' : 'Importa Domande'}
+              </button>
+            </form>
+          </div>
+
+          {/* Leaderboard Migliori Punteggi */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+              <Trophy className="w-5 h-5 text-amber-400" />
+              Classifica High Scores
+            </h3>
+            {leaderboard.length === 0 ? (
+              <p className="text-xs text-slate-500">Nessuna partita registrata.</p>
+            ) : (
+              <div className="space-y-2">
+                {leaderboard.map((res, rank) => (
+                  <div key={res.id} className="flex justify-between items-center bg-slate-800/50 px-3 py-2 rounded-lg text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-amber-400">#{rank + 1}</span>
+                      <span className="text-slate-300">{new Date(res.playedAt).toLocaleDateString()}</span>
+                    </div>
+                    <span className="font-bold text-indigo-400">{res.score} / {res.totalQuestions} pt</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Lista Domande con Modifica ed Eliminazione Singola */}
+        <div className="lg:col-span-2">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-6">
+<h2 className="text-xl font-bold text-white">Domande Presenti ({section.questions?.length || 0})</h2>
+{(section.questions?.length || 0) > 0 && (
+                <button
+                  onClick={handleClearQuestions}
+                  className="flex items-center gap-1 text-red-400 hover:text-red-300 text-xs font-semibold transition"
+                >
+                  <Trash2 className="w-4 h-4" /> Svuota tutto
+                </button>
+              )}
+            </div>
+
+{(!section.questions || section.questions.length === 0) ? (
+                <div className="text-center py-12 text-slate-500 text-sm">
+                Nessuna domanda caricata. Utilizza il pannello di sinistra per caricare un documento Word.
+              </div>
+            ) : (
+              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+                {section.questions.map((q, idx) => (
+                  <div key={q.id} className="bg-slate-800/60 border border-slate-800 rounded-xl p-4 relative group">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="text-xs font-bold text-indigo-400">Domanda {idx + 1}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="bg-slate-700 text-slate-300 text-[10px] px-2 py-0.5 rounded font-mono">
+                          {q.type}
+                        </span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
+                          q.level === 'FACILE' ? 'bg-emerald-950 text-emerald-400' :
+                          q.level === 'MEDIO' ? 'bg-amber-950 text-amber-400' : 'bg-rose-950 text-rose-400'
+                        }`}>
+                          {q.level}
+                        </span>
+                        
+                        {/* Azioni Modifica e Cancella */}
+                        <button
+                          onClick={() => setEditingQuestion(q)}
+                          className="text-slate-400 hover:text-indigo-400 p-1"
+                          title="Modifica Domanda"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSingleQuestion(q.id)}
+                          className="text-slate-400 hover:text-red-400 p-1"
+                          title="Elimina Domanda"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <p className="text-white text-sm font-medium mb-3">{q.questionText}</p>
+
+                    {q.options?.length > 0 && (
+                      <div className="grid grid-cols-2 gap-2 mb-3">
+                        {q.options.map(opt => (
+                          <div key={opt.id} className="bg-slate-900/50 px-2.5 py-1.5 rounded text-xs text-slate-300 border border-slate-800">
+                            {opt.text}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="text-xs text-emerald-400 font-semibold bg-emerald-950/30 px-3 py-1.5 rounded border border-emerald-900/40">
+                      Risposta corretta: {q.correctAnswer}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <EditQuestionModal
+        isOpen={!!editingQuestion}
+        onClose={() => setEditingQuestion(null)}
+        question={editingQuestion}
+        onQuestionUpdated={fetchSectionData}
+      />
+    </div>
   );
 }
 </file>
@@ -10233,6 +10087,188 @@ export default function Navbar({
         </div>
       )}
     </nav>
+  );
+}
+</file>
+
+<file path="frontend/src/App.jsx">
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+import Navbar from './components/Navbar';
+import CreateSectionModal from './components/CreateSectionModal';
+import CreateStoryModal from './components/CreateStoryModal';
+import Toast from './components/Toast';
+
+import Home from './pages/Home';
+import QuizAnime from './pages/QuizAnime';
+import SectionDetail from './pages/SectionDetail';
+import QuizPlay from './pages/QuizPlay';
+import StoriesList from './pages/StoriesList';
+import StoryDetail from './pages/StoryDetail';
+import GuessCharacter from './pages/GuessCharacter';
+import MultiplayerLobby from './pages/MultiplayerLobby';
+import MultiplayerPlay from './pages/MultiplayerPlay';
+import BackgroundMusic from './components/BackgroundMusic';
+export default function App() {
+  const [isAdmin, setIsAdmin] = useState(() => {
+    return localStorage.getItem('isAdmin') === 'true';
+  });
+  const [adminPasswordModal, setAdminPasswordModal] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  
+  // Modali di creazione
+  const [isCreateSectionOpen, setIsCreateSectionOpen] = useState(false);
+  const [isCreateStoryOpen, setIsCreateStoryOpen] = useState(false);
+
+  // Stato fittizio/fetch per le sezioni
+  const [sections, setSections] = useState([]);
+  const [toast, setToast] = useState({ message: '', type: '' });
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
+  };
+
+  const handleAdminToggle = () => {
+    if (isAdmin) {
+      setIsAdmin(false);
+      localStorage.removeItem('isAdmin');
+      localStorage.removeItem('adminPassword');
+      showToast('Modalità Admin disattivata', 'error');
+    } else {
+      setAdminPasswordModal(true);
+    }
+  };
+
+  const handleAdminLoginSubmit = (e) => {
+    e.preventDefault();
+    if (!passwordInput) return;
+
+    localStorage.setItem('adminPassword', passwordInput);
+    localStorage.setItem('isAdmin', 'true');
+    setIsAdmin(true);
+    setPasswordInput('');
+    setAdminPasswordModal(false);
+    showToast('Modalità Admin attivata!', 'success');
+  };
+
+  const handleDeleteSection = (id) => {
+    setSections((prev) => prev.filter((sec) => sec.id !== id));
+    showToast('Sezione eliminata', 'error');
+  };
+
+  const triggerRefresh = () => setRefreshTrigger((prev) => prev + 1);
+
+  return (
+    <Router>
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
+        <BackgroundMusic />
+        <Navbar 
+          isAdmin={isAdmin}
+          onToggleAdmin={handleAdminToggle}
+          onOpenCreateSection={() => setIsCreateSectionOpen(true)}
+          onOpenCreateStory={() => setIsCreateStoryOpen(true)}
+        />
+
+        <main className="flex-1">
+<Routes>
+  {/* Pagina Principale Hub */}
+  <Route path="/" element={<Home />} />
+
+  {/* Pagina Quiz Separata */}
+  <Route 
+    path="/quizzes" 
+    element={
+      <QuizAnime 
+        sections={sections} 
+        onDeleteSection={handleDeleteSection} 
+        isAdmin={isAdmin} 
+      />
+    } 
+  />
+
+  {/* Rotte Admin e Dettagli Sezione */}
+  <Route path="/admin/stories" element={<StoriesList isAdmin={isAdmin} />} />
+  <Route path="/admin/section/:id" element={<SectionDetail isAdmin={isAdmin} />} />
+  <Route path="/section/:id" element={<SectionDetail isAdmin={isAdmin} />} />
+
+  {/* Altre Rotte */}
+  <Route path="/play/:id" element={<QuizPlay />} />
+  <Route path="/stories" element={<StoriesList refreshTrigger={refreshTrigger} isAdmin={isAdmin} />} />
+  <Route path="/stories/:id" element={<StoryDetail />} />
+  <Route path="/guess-character" element={<GuessCharacter />} />
+  <Route path="/multiplayer" element={<MultiplayerLobby />} />
+  <Route path="/multiplayer-play" element={<MultiplayerPlay />} />
+</Routes>
+        </main>
+
+        {/* Modal Password Admin */}
+        {adminPasswordModal && (
+          <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+              <h3 className="text-xl font-bold text-white mb-2">Accesso Amministratore</h3>
+              <p className="text-sm text-slate-400 mb-4">
+                Inserisci la password per sbloccare la creazione di quiz e storie.
+              </p>
+              <form onSubmit={handleAdminLoginSubmit} className="space-y-4">
+                <input
+                  type="password"
+                  placeholder="Password Admin..."
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  autoFocus
+                />
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAdminPasswordModal(false)}
+                    className="px-4 py-2 text-sm text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    Annulla
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold cursor-pointer"
+                  >
+                    Conferma
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modale Creazione Sezione Quiz */}
+        <CreateSectionModal 
+          isOpen={isCreateSectionOpen}
+          onClose={() => setIsCreateSectionOpen(false)} 
+          onSuccess={() => {
+            setIsCreateSectionOpen(false);
+            triggerRefresh();
+            showToast('Sezione Quiz creata con successo!');
+          }} 
+        />
+
+        {/* Modale Creazione Racconto */}
+        <CreateStoryModal 
+          isOpen={isCreateStoryOpen}
+          onClose={() => setIsCreateStoryOpen(false)} 
+          onSuccess={() => {
+            setIsCreateStoryOpen(false);
+            triggerRefresh();
+            showToast('Racconto creato con successo!');
+          }} 
+        />
+
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast({ message: '', type: '' })} 
+        />
+      </div>
+    </Router>
   );
 }
 </file>

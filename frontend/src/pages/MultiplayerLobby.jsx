@@ -312,13 +312,13 @@ export default function MultiplayerLobby() {
       <label className="block text-xs font-bold text-slate-400 mb-2 uppercase">Crea Stanza Modalità</label>
       <div className="grid grid-cols-2 gap-2 mb-6">
         <button onClick={() => handleCreateRoom('KAHOOT')} className="bg-indigo-600 hover:bg-indigo-500 p-2.5 rounded-xl text-xs font-bold transition cursor-pointer text-center">
-          Kahoot
+          Quiz Battle
         </button>
         <button onClick={() => handleCreateRoom('FASTEST_FINGER')} className="bg-rose-600 hover:bg-rose-500 p-2.5 rounded-xl text-xs font-bold transition cursor-pointer text-center">
-          Duello PG
+          Riconosci PG
         </button>
         <button onClick={() => handleCreateRoom('BLUR_DUEL')} className="bg-amber-600 hover:bg-amber-500 p-2.5 rounded-xl text-xs font-bold transition cursor-pointer text-center">
-          Blur Duel
+          PG nascosto
         </button>
         <button onClick={() => handleCreateRoom('AUDIO_DUEL')} className="bg-purple-600 hover:bg-purple-500 p-2.5 rounded-xl text-xs font-bold transition cursor-pointer text-center">
           Audio Quiz

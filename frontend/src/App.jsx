@@ -21,7 +21,7 @@ import CharacterQuestions from './pages/CharacterQuestions';
 
 export default function App() {
   // Password di default uguale a quella Admin (o personalizzabile)
-  const SITE_PASSWORD = import.meta.env.PASSWORD || 'admin123';
+  const SITE_PASSWORD = import.meta.env.PASSWORD || 'Asami200202';
 
   // Stato di autenticazione globale per l'accesso al sito
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
